@@ -20,8 +20,11 @@ interface DateColumn {
   styleUrl: './scheduler.scss',
 })
 export class Scheduler {
-  public timescale = signal<Timescale>(Timescale.Month);
-  public baseDate = signal<Date>(new Date());
+  private readonly MS_PER_HOUR = 60 * 60 * 1000;
+  private readonly MS_PER_DAY = 86400000;
+
+  timescale = signal<Timescale>(Timescale.Month);
+  baseDate = signal<Date>(new Date());
   private columnCount = 300;
 
   scrollElement = viewChild<ElementRef<HTMLDivElement>>('scrollElement');
@@ -56,7 +59,7 @@ export class Scheduler {
 
     switch (this.timescale()) {
       case Timescale.Hour:
-        date = new Date(base.getTime() + index * 60 * 60 * 1000);
+        date = new Date(base.getTime() + index * this.MS_PER_HOUR);
         label = date.toLocaleTimeString('en-US', {
           hour: 'numeric',
           hour12: true,
@@ -100,7 +103,7 @@ export class Scheduler {
     // Make Sunday (0) equal to 7
     tempDate.setDate(tempDate.getDate() + 4 - (tempDate.getDay() || 7));
     const yearStart = new Date(tempDate.getFullYear(), 0, 1);
-    const weekNumber = Math.ceil(((tempDate.getTime() - yearStart.getTime()) / 86400000 + 1) / 7);
+    const weekNumber = Math.ceil(((tempDate.getTime() - yearStart.getTime()) / this.MS_PER_DAY + 1) / 7);
     return weekNumber;
   }
 }

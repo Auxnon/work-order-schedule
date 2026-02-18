@@ -1,9 +1,20 @@
-<table>
-  <tr>
-    <div #scrollElement class="virtual-scroll-container" [style.height.px]="virtualizer.getTotalSize()">
-      @for (item of virtualizer.getVirtualItems(); track item.index){
-        <td class="bg-red-100 h-100 border-e-3">{{ $index + 'test' }}</td>
+<div class="scheduler-container">
+  <div #scrollElement class="scroll-container">
+    <div class="virtual-content" [style.width.px]="virtualizer.getTotalSize()">
+      @for (item of virtualizer.getVirtualItems(); track item.index) {
+        <div
+          class="date-column"
+          [style.transform]="'translateX(' + item.start + 'px)'"
+          [style.width.px]="item.size"
+        >
+          <div class="column-header">
+            {{ getDateForColumn(item.index).label }}
+          </div>
+          <div class="column-content">
+            <!-- Task content will go here -->
+          </div>
+        </div>
       }
     </div>
-  </tr>
-</table>
+  </div>
+</div>

@@ -1,0 +1,9 @@
+<table>
+  <tr>
+    <div #scrollElement class="virtual-scroll-container" [style.height.px]="virtualizer.getTotalSize()">
+      @for (item of virtualizer.getVirtualItems(); track item.index){
+        <td class="bg-red-100 h-100 border-e-3">{{ $index + 'test' }}</td>
+      }
+    </div>
+  </tr>
+</table>

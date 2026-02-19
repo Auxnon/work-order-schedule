@@ -1,20 +1,79 @@
-<div class="scheduler-container">
-  <div #scrollElement class="scroll-container">
-    <div class="virtual-content" [style.width.px]="virtualizer.getTotalSize()">
-      @for (item of virtualizer.getVirtualItems(); track item.index) {
-        <div
-          class="date-column"
-          [style.transform]="'translateX(' + item.start + 'px)'"
-          [style.width.px]="item.size"
-        >
-          <div class="column-header">
-            {{ getDateForColumn(item.index).label }}
-          </div>
-          <div class="column-content">
-            <!-- Task content will go here -->
-          </div>
-        </div>
-      }
-    </div>
+<div class="scheduler-wrapper">
+  <!-- Timescale dropdown -->
+  <div class="timescale-dropdown">
+    <select [value]="timescale()" (change)="changeTimescale($any($event.target).value)" class="timescale-select">
+      <option [value]="Timescale.Hour">Hour</option>
+      <option [value]="Timescale.Day">Day</option>
+      <option [value]="Timescale.Week">Week</option>
+      <option [value]="Timescale.Month">Month</option>
+    </select>
   </div>
+
+  <div class="scheduler-container">
+    <div
+      #scrollElement
+      class="scroll-container"
+      (mousemove)="onMouseMove($event)"
+      (mouseleave)="onMouseLeave()"
+      (click)="onClick($event)"
+    >
+      <!-- Row hover effect -->
+      @if (showHoverEffect() && hoveredClientId()) {
+        <div
+          class="row-hover-effect"
+          [style.top.px]="Math.floor(mouseY() / 60) * 60"
+        ></div>
+      }
+
+      <!-- Mouse position hover effect -->
+      @if (showHoverEffect()) {
+        <div
+          class="mouse-hover-effect"
+          [style.left.px]="mouseX() - 56.5"
+          [style.top.px]="Math.floor(mouseY() / 60) * 60 + 11"
+        ></div>
+      }
+
+      <div class="virtual-content" [style.width.px]="virtualizer.getTotalSize()">
+        @for (item of virtualizer.getVirtualItems(); track item.index) {
+          <div
+            class="date-column"
+            [style.transform]="'translateX(' + item.start + 'px)'"
+            [style.width.px]="item.size"
+          >
+            <div class="column-header">
+              {{ getDateForColumn(item.index).label }}
+            </div>
+            <div class="column-content">
+              @for (client of clients(); track client.id) {
+                <div class="client-row">
+                  @for (workOrder of getWorkOrdersForClient(client.id); track workOrder.id) {
+                    <app-task
+                      [workOrder]="workOrder"
+                      [client]="client"
+                      (edit)="onEditWorkOrder(workOrder)"
+                      (delete)="onDeleteWorkOrder(workOrder)"
+                    ></app-task>
+                  }
+                </div>
+              }
+            </div>
+          </div>
+        }
+      </div>
+    </div>
+
+    <!-- Customer overlay -->
+    <app-customer-overlay></app-customer-overlay>
+  </div>
+
+  <!-- Work Order Details Sidebar -->
+  @if (showWorkOrderDetails()) {
+    <app-work-order-details
+      [workOrder]="selectedWorkOrder()"
+      [clientId]="selectedClientId()"
+      (close)="onCloseDetails()"
+    ></app-work-order-details>
+  }
 </div>
+

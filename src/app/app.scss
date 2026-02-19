@@ -1,9 +1,8 @@
-.content {
-  display: flex;
-  justify-content: space-around;
+.main {
   width: 100%;
-  overflow-x: auto;
-  max-width: 700px;
-  margin-bottom: 3rem;
+  height: 100vh;
+  padding: 0;
+  margin: 0;
+  overflow: hidden;
 }
 

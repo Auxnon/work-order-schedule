@@ -1,5 +1,11 @@
-import { Component, ElementRef, signal, viewChild } from '@angular/core';
+import { Component, ElementRef, signal, viewChild, inject } from '@angular/core';
+import { CommonModule } from '@angular/common';
 import { injectVirtualizer } from '@tanstack/angular-virtual';
+import { CustomerOverlay } from '../customer-overlay/customer-overlay';
+import { Task } from '../task/task';
+import { WorkOrderDetails } from '../work-order-details/work-order-details';
+import { WorkOrderService } from '../services/work-order.service';
+import { WorkOrder } from '../models/work-order.model';
 
 export enum Timescale {
   Hour = 'hour',
@@ -15,7 +21,7 @@ interface DateColumn {
 
 @Component({
   selector: 'app-scheduler',
-  imports: [],
+  imports: [CommonModule, CustomerOverlay, Task, WorkOrderDetails],
   templateUrl: './scheduler.html',
   styleUrl: './scheduler.scss',
 })
@@ -23,11 +29,27 @@ export class Scheduler {
   private readonly MS_PER_HOUR = 60 * 60 * 1000;
   private readonly MS_PER_DAY = 86400000;
 
+  private workOrderService = inject(WorkOrderService);
+
   timescale = signal<Timescale>(Timescale.Month);
   baseDate = signal<Date>(new Date());
   private columnCount = 300;
 
   scrollElement = viewChild<ElementRef<HTMLDivElement>>('scrollElement');
+
+  // Hover state
+  hoveredClientId = signal<string | null>(null);
+  mouseX = signal<number>(0);
+  mouseY = signal<number>(0);
+  showHoverEffect = signal<boolean>(false);
+
+  // Modal state
+  showWorkOrderDetails = signal<boolean>(false);
+  selectedWorkOrder = signal<WorkOrder | undefined>(undefined);
+  selectedClientId = signal<string | undefined>(undefined);
+
+  clients = this.workOrderService.getClients();
+  workOrders = this.workOrderService.getWorkOrders();
 
   virtualizer = injectVirtualizer(() => ({
     count: this.columnCount,
@@ -95,15 +117,84 @@ export class Scheduler {
   }
 
   private getWeekNumber(date: Date): number {
-    // ISO 8601 week calculation
-    // Week 1 is the week with the first Thursday of the year
     const tempDate = new Date(date.getTime());
     tempDate.setHours(0, 0, 0, 0);
-    // Set to nearest Thursday: current date + 4 - current day number
-    // Make Sunday (0) equal to 7
     tempDate.setDate(tempDate.getDate() + 4 - (tempDate.getDay() || 7));
     const yearStart = new Date(tempDate.getFullYear(), 0, 1);
     const weekNumber = Math.ceil(((tempDate.getTime() - yearStart.getTime()) / this.MS_PER_DAY + 1) / 7);
     return weekNumber;
   }
+
+  onMouseMove(event: MouseEvent): void {
+    const target = event.currentTarget as HTMLElement;
+    const rect = target.getBoundingClientRect();
+    const x = event.clientX - rect.left;
+    const y = event.clientY - rect.top;
+
+    this.mouseX.set(x);
+    this.mouseY.set(y);
+    this.showHoverEffect.set(true);
+
+    // Determine which client row we're hovering over
+    const rowHeight = 60;
+    const clientIndex = Math.floor(y / rowHeight);
+    const clients = this.clients();
+    if (clientIndex >= 0 && clientIndex < clients.length) {
+      this.hoveredClientId.set(clients[clientIndex].id);
+    } else {
+      this.hoveredClientId.set(null);
+    }
+  }
+
+  onMouseLeave(): void {
+    this.showHoverEffect.set(false);
+    this.hoveredClientId.set(null);
+  }
+
+  onClick(event: MouseEvent): void {
+    const target = event.currentTarget as HTMLElement;
+    const rect = target.getBoundingClientRect();
+    const y = event.clientY - rect.top;
+
+    const rowHeight = 60;
+    const clientIndex = Math.floor(y / rowHeight);
+    const clients = this.clients();
+    
+    if (clientIndex >= 0 && clientIndex < clients.length) {
+      const clientId = clients[clientIndex].id;
+      this.selectedClientId.set(clientId);
+      this.selectedWorkOrder.set(undefined);
+      this.showWorkOrderDetails.set(true);
+    }
+  }
+
+  onCloseDetails(): void {
+    this.showWorkOrderDetails.set(false);
+    this.selectedWorkOrder.set(undefined);
+    this.selectedClientId.set(undefined);
+  }
+
+  onEditWorkOrder(workOrder: WorkOrder): void {
+    this.selectedWorkOrder.set(workOrder);
+    this.selectedClientId.set(workOrder.clientId);
+    this.showWorkOrderDetails.set(true);
+  }
+
+  onDeleteWorkOrder(workOrder: WorkOrder): void {
+    if (confirm('Are you sure you want to delete this work order?')) {
+      this.workOrderService.deleteWorkOrder(workOrder.id);
+    }
+  }
+
+  getWorkOrdersForClient(clientId: string): WorkOrder[] {
+    return this.workOrders().filter(order => order.clientId === clientId);
+  }
+
+  changeTimescale(timescale: Timescale): void {
+    this.timescale.set(timescale);
+  }
+
+  readonly Timescale = Timescale;
+  readonly Math = Math;
 }
+

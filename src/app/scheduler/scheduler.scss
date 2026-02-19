@@ -1,9 +1,37 @@
-.scheduler-container {
+.scheduler-wrapper {
   width: 100%;
   height: 100vh;
   display: flex;
   flex-direction: column;
+}
+
+.timescale-dropdown {
+  padding: 16px;
+  background-color: white;
+  border-bottom: 1px solid rgba(230, 235, 240, 1);
+}
+
+.timescale-select {
+  padding: 8px 12px;
+  font-size: 14px;
+  border: 1px solid rgba(230, 235, 240, 1);
+  border-radius: 6px;
+  outline: none;
+  cursor: pointer;
+
+  &:focus {
+    border-color: rgba(101, 112, 255, 1);
+  }
+}
+
+.scheduler-container {
+  flex: 1;
+  width: 100%;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
   overflow: hidden;
+  position: relative;
 }
 
 .scroll-container {
@@ -13,6 +41,7 @@
   position: relative;
   width: 100%;
   height: 100%;
+  cursor: pointer;
 }
 
 .virtual-content {
@@ -46,5 +75,36 @@
 .column-content {
   flex: 1;
   overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+}
+
+.client-row {
+  height: 60px;
+  border-bottom: 1px solid rgba(230, 235, 240, 1);
+  position: relative;
+  display: flex;
+  align-items: center;
   padding: 8px;
+}
+
+.row-hover-effect {
+  position: absolute;
+  left: 0;
+  width: 100%;
+  height: 60px;
+  background-color: rgba(238, 240, 255, 1);
+  pointer-events: none;
+  z-index: 5;
+}
+
+.mouse-hover-effect {
+  position: absolute;
+  width: 113px;
+  height: 38px;
+  border: 1px solid rgba(195, 199, 255, 1);
+  border-radius: 8px;
+  background-color: rgba(101, 112, 255, 0.1);
+  pointer-events: none;
+  z-index: 6;
 }

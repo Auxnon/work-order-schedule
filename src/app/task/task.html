@@ -1,1 +1,17 @@
-<p>task works!</p>
+<div class="task-card">
+  <div class="task-content">
+    <span class="client-name">{{ client.name }}</span>
+    <div class="task-actions">
+      <span class="status-tag" [class]="getStatusClass()">{{ workOrder.status }}</span>
+      <button class="menu-button" (click)="toggleMenu($event)">⋮</button>
+    </div>
+  </div>
+
+  @if (showMenu()) {
+    <div class="task-menu">
+      <button class="menu-item" (click)="onEdit()">Edit</button>
+      <button class="menu-item" (click)="onDelete()">Delete</button>
+    </div>
+  }
+</div>
+

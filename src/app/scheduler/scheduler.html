@@ -21,7 +21,7 @@
       @if (showHoverEffect() && hoveredClientId()) {
         <div
           class="row-hover-effect"
-          [style.top.px]="Math.floor(mouseY() / 60) * 60"
+          [style.top.px]="Math.floor(mouseY() / 60) * 60 + 52"
         ></div>
       }
 
@@ -30,11 +30,12 @@
         <div
           class="mouse-hover-effect"
           [style.left.px]="mouseX() - 56.5"
-          [style.top.px]="Math.floor(mouseY() / 60) * 60 + 11"
+          [style.top.px]="Math.floor(mouseY() / 60) * 60 + 63"
         ></div>
       }
 
       <div class="virtual-content" [style.width.px]="virtualizer.getTotalSize()">
+        <!-- Date columns with headers -->
         @for (item of virtualizer.getVirtualItems(); track item.index) {
           <div
             class="date-column"
@@ -44,22 +45,30 @@
             <div class="column-header">
               {{ getDateForColumn(item.index).label }}
             </div>
-            <div class="column-content">
-              @for (client of clients(); track client.id) {
-                <div class="client-row">
-                  @for (workOrder of getWorkOrdersForClient(client.id); track workOrder.id) {
-                    <app-task
-                      [workOrder]="workOrder"
-                      [client]="client"
-                      (edit)="onEditWorkOrder(workOrder)"
-                      (delete)="onDeleteWorkOrder(workOrder)"
-                    ></app-task>
-                  }
+          </div>
+        }
+
+        <!-- Client rows -->
+        <div class="client-rows-container">
+          @for (client of clients(); track client.id; let clientIndex = $index) {
+            <div class="client-row-container" [style.top.px]="52 + clientIndex * 60">
+              @for (workOrder of getWorkOrdersForClient(client.id); track workOrder.id) {
+                <div
+                  class="task-wrapper"
+                  [style.left.px]="getTaskLeft(workOrder)"
+                  [style.width.px]="getTaskWidth(workOrder)"
+                >
+                  <app-task
+                    [workOrder]="workOrder"
+                    [client]="client"
+                    (edit)="onEditWorkOrder(workOrder)"
+                    (delete)="onDeleteWorkOrder(workOrder)"
+                  ></app-task>
                 </div>
               }
             </div>
-          </div>
-        }
+          }
+        </div>
       </div>
     </div>
 

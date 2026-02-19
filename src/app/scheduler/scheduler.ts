@@ -194,6 +194,60 @@ export class Scheduler {
     this.timescale.set(timescale);
   }
 
+  getTaskLeft(workOrder: WorkOrder): number {
+    const baseDate = this.baseDate();
+    const startDate = workOrder.startDate;
+    const columnWidth = this.getColumnWidth();
+    
+    let indexOffset: number;
+    switch (this.timescale()) {
+      case Timescale.Hour:
+        indexOffset = (startDate.getTime() - baseDate.getTime()) / this.MS_PER_HOUR;
+        break;
+      case Timescale.Day:
+        indexOffset = Math.floor((startDate.getTime() - baseDate.getTime()) / this.MS_PER_DAY);
+        break;
+      case Timescale.Week:
+        indexOffset = Math.floor((startDate.getTime() - baseDate.getTime()) / (this.MS_PER_DAY * 7));
+        break;
+      case Timescale.Month:
+        indexOffset = (startDate.getFullYear() - baseDate.getFullYear()) * 12 + 
+                     (startDate.getMonth() - baseDate.getMonth());
+        break;
+      default:
+        indexOffset = 0;
+    }
+    
+    return Math.max(0, indexOffset * columnWidth);
+  }
+
+  getTaskWidth(workOrder: WorkOrder): number {
+    const startDate = workOrder.startDate;
+    const endDate = workOrder.endDate;
+    const columnWidth = this.getColumnWidth();
+    
+    let duration: number;
+    switch (this.timescale()) {
+      case Timescale.Hour:
+        duration = (endDate.getTime() - startDate.getTime()) / this.MS_PER_HOUR;
+        break;
+      case Timescale.Day:
+        duration = (endDate.getTime() - startDate.getTime()) / this.MS_PER_DAY;
+        break;
+      case Timescale.Week:
+        duration = (endDate.getTime() - startDate.getTime()) / (this.MS_PER_DAY * 7);
+        break;
+      case Timescale.Month:
+        duration = (endDate.getFullYear() - startDate.getFullYear()) * 12 + 
+                  (endDate.getMonth() - startDate.getMonth());
+        break;
+      default:
+        duration = 1;
+    }
+    
+    return Math.max(columnWidth * 0.3, duration * columnWidth);
+  }
+
   readonly Timescale = Timescale;
   readonly Math = Math;
 }

@@ -1,0 +1,50 @@
+.scheduler-container {
+  width: 100%;
+  height: 100vh;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.scroll-container {
+  flex: 1;
+  overflow-x: auto;
+  overflow-y: hidden;
+  position: relative;
+  width: 100%;
+  height: 100%;
+}
+
+.virtual-content {
+  position: relative;
+  height: 100%;
+}
+
+.date-column {
+  position: absolute;
+  top: 0;
+  left: 0;
+  height: 100%;
+  background-color: #f7f9fc;
+  border-right: 1px solid rgba(230, 235, 240, 1);
+  display: flex;
+  flex-direction: column;
+}
+
+.column-header {
+  padding: 16px 12px;
+  font-weight: 600;
+  font-size: 14px;
+  border-bottom: 1px solid rgba(230, 235, 240, 1);
+  text-align: center;
+  background-color: #ffffff;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.column-content {
+  flex: 1;
+  overflow-y: auto;
+  padding: 8px;
+}

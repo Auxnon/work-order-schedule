@@ -221,6 +221,8 @@ export class Scheduler {
     return Math.max(0, indexOffset * columnWidth);
   }
 
+  private readonly MIN_TASK_WIDTH_RATIO = 0.3; // Minimum task width is 30% of column width
+
   getTaskWidth(workOrder: WorkOrder): number {
     const startDate = workOrder.startDate;
     const endDate = workOrder.endDate;
@@ -245,7 +247,7 @@ export class Scheduler {
         duration = 1;
     }
     
-    return Math.max(columnWidth * 0.3, duration * columnWidth);
+    return Math.max(columnWidth * this.MIN_TASK_WIDTH_RATIO, duration * columnWidth);
   }
 
   readonly Timescale = Timescale;

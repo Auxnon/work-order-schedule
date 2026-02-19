@@ -33,7 +33,7 @@ export class Task {
   }
 
   getStatusClass(): string {
-    return this.workOrder.status.toLowerCase().replace(' ', '-');
+    return this.workOrder.status.toLowerCase().replaceAll(' ', '-');
   }
 }
 

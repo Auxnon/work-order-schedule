@@ -3,6 +3,9 @@
   height: 100vh;
   display: flex;
   flex-direction: column;
+  position: absolute;
+  left: 0;
+  top: 0;
 }
 
 .timescale-dropdown {
@@ -119,4 +122,5 @@
   background-color: rgba(101, 112, 255, 0.1);
   pointer-events: none;
   z-index: 6;
+  transform: translate(-50%,-50%);
 }

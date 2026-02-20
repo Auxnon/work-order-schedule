@@ -29,8 +29,8 @@
       @if (showHoverEffect()) {
         <div
           class="mouse-hover-effect"
-          [style.left.px]="mouseX() - 56.5"
-          [style.top.px]="Math.floor(mouseY() / 60) * 60 + 63"
+          [style.left.px]="mouseX()"
+          [style.top.px]="Math.floor(mouseY() / 60) * 60 "
         ></div>
       }
 

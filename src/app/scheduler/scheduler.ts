@@ -126,10 +126,17 @@ export class Scheduler {
   }
 
   onMouseMove(event: MouseEvent): void {
+    const ele= this.scrollElement()?.nativeElement
+    const scrollerRect=ele ? ele.getBoundingClientRect(): {left:0,top:0};
+    // console.log(rec)
     const target = event.currentTarget as HTMLElement;
-    const rect = target.getBoundingClientRect();
-    const x = event.clientX - rect.left;
-    const y = event.clientY - rect.top;
+    // const rect = target.getBoundingClientRect();
+    const x = event.clientX - scrollerRect.left;
+    let y = event.clientY - scrollerRect.top ;
+    if ( y <52)
+      return
+    y-=52
+    console.log(y)
 
     this.mouseX.set(x);
     this.mouseY.set(y);
@@ -159,7 +166,7 @@ export class Scheduler {
     const rowHeight = 60;
     const clientIndex = Math.floor(y / rowHeight);
     const clients = this.clients();
-    
+
     if (clientIndex >= 0 && clientIndex < clients.length) {
       const clientId = clients[clientIndex].id;
       this.selectedClientId.set(clientId);
@@ -198,7 +205,7 @@ export class Scheduler {
     const baseDate = this.baseDate();
     const startDate = workOrder.startDate;
     const columnWidth = this.getColumnWidth();
-    
+
     let indexOffset: number;
     switch (this.timescale()) {
       case Timescale.Hour:
@@ -211,13 +218,13 @@ export class Scheduler {
         indexOffset = Math.floor((startDate.getTime() - baseDate.getTime()) / (this.MS_PER_DAY * 7));
         break;
       case Timescale.Month:
-        indexOffset = (startDate.getFullYear() - baseDate.getFullYear()) * 12 + 
+        indexOffset = (startDate.getFullYear() - baseDate.getFullYear()) * 12 +
                      (startDate.getMonth() - baseDate.getMonth());
         break;
       default:
         indexOffset = 0;
     }
-    
+
     return Math.max(0, indexOffset * columnWidth);
   }
 
@@ -227,7 +234,7 @@ export class Scheduler {
     const startDate = workOrder.startDate;
     const endDate = workOrder.endDate;
     const columnWidth = this.getColumnWidth();
-    
+
     let duration: number;
     switch (this.timescale()) {
       case Timescale.Hour:
@@ -240,13 +247,13 @@ export class Scheduler {
         duration = (endDate.getTime() - startDate.getTime()) / (this.MS_PER_DAY * 7);
         break;
       case Timescale.Month:
-        duration = (endDate.getFullYear() - startDate.getFullYear()) * 12 + 
+        duration = (endDate.getFullYear() - startDate.getFullYear()) * 12 +
                   (endDate.getMonth() - startDate.getMonth());
         break;
       default:
         duration = 1;
     }
-    
+
     return Math.max(columnWidth * this.MIN_TASK_WIDTH_RATIO, duration * columnWidth);
   }
 

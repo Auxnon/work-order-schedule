@@ -28,6 +28,9 @@ interface DateColumn {
 export class Scheduler {
   private readonly MS_PER_HOUR = 60 * 60 * 1000;
   private readonly MS_PER_DAY = 86400000;
+  private readonly HEADER_HEIGHT = 52;
+  private readonly ROW_HEIGHT = 60;
+  private readonly MIN_TASK_WIDTH_RATIO = 0.3;
 
   private workOrderService = inject(WorkOrderService);
 
@@ -126,25 +129,17 @@ export class Scheduler {
   }
 
   onMouseMove(event: MouseEvent): void {
-    const ele= this.scrollElement()?.nativeElement
-    const scrollerRect=ele ? ele.getBoundingClientRect(): {left:0,top:0};
-    // console.log(rec)
     const target = event.currentTarget as HTMLElement;
-    // const rect = target.getBoundingClientRect();
-    const x = event.clientX - scrollerRect.left;
-    let y = event.clientY - scrollerRect.top ;
-    if ( y <52)
-      return
-    y-=52
-    console.log(y)
+    const rect = target.getBoundingClientRect();
+    const x = event.clientX - rect.left;
+    const y = event.clientY - rect.top;
 
     this.mouseX.set(x);
     this.mouseY.set(y);
     this.showHoverEffect.set(true);
 
     // Determine which client row we're hovering over
-    const rowHeight = 60;
-    const clientIndex = Math.floor(y / rowHeight);
+    const clientIndex = Math.floor(y / this.ROW_HEIGHT);
     const clients = this.clients();
     if (clientIndex >= 0 && clientIndex < clients.length) {
       this.hoveredClientId.set(clients[clientIndex].id);
@@ -163,8 +158,7 @@ export class Scheduler {
     const rect = target.getBoundingClientRect();
     const y = event.clientY - rect.top;
 
-    const rowHeight = 60;
-    const clientIndex = Math.floor(y / rowHeight);
+    const clientIndex = Math.floor(y / this.ROW_HEIGHT);
     const clients = this.clients();
 
     if (clientIndex >= 0 && clientIndex < clients.length) {
@@ -201,6 +195,21 @@ export class Scheduler {
     this.timescale.set(timescale);
   }
 
+  // Position calculation methods
+  getClientRowTop(clientIndex: number): number {
+    return this.HEADER_HEIGHT + clientIndex * this.ROW_HEIGHT;
+  }
+
+  getRowHoverTop(): number {
+    const clientIndex = Math.floor(this.mouseY() / this.ROW_HEIGHT);
+    return clientIndex * this.ROW_HEIGHT;
+  }
+
+  getMouseHoverTop(): number {
+    const clientIndex = Math.floor(this.mouseY() / this.ROW_HEIGHT);
+    return clientIndex * this.ROW_HEIGHT + this.ROW_HEIGHT / 2;
+  }
+
   getTaskLeft(workOrder: WorkOrder): number {
     const baseDate = this.baseDate();
     const startDate = workOrder.startDate;
@@ -227,8 +236,6 @@ export class Scheduler {
 
     return Math.max(0, indexOffset * columnWidth);
   }
-
-  private readonly MIN_TASK_WIDTH_RATIO = 0.3; // Minimum task width is 30% of column width
 
   getTaskWidth(workOrder: WorkOrder): number {
     const startDate = workOrder.startDate;
@@ -258,6 +265,5 @@ export class Scheduler {
   }
 
   readonly Timescale = Timescale;
-  readonly Math = Math;
 }
 

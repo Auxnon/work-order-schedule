@@ -45,7 +45,6 @@
   position: relative;
   width: 100%;
   height: 100%;
-  cursor: pointer;
 }
 
 .virtual-content {
@@ -103,6 +102,18 @@
   pointer-events: all;
 }
 
+// Fixed interaction pane that sits above scrollable content
+.interaction-pane {
+  position: absolute;
+  top: 52px; // Height of column headers
+  left: 0;
+  right: 0;
+  bottom: 0;
+  pointer-events: all;
+  cursor: pointer;
+  z-index: 7;
+}
+
 .row-hover-effect {
   position: absolute;
   left: 0;
@@ -122,5 +133,6 @@
   background-color: rgba(101, 112, 255, 0.1);
   pointer-events: none;
   z-index: 6;
-  transform: translate(-50%,-50%);
+  transform: translate(-50%, -50%);
 }
+

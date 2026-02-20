@@ -13,27 +13,7 @@
     <div
       #scrollElement
       class="scroll-container"
-      (mousemove)="onMouseMove($event)"
-      (mouseleave)="onMouseLeave()"
-      (click)="onClick($event)"
     >
-      <!-- Row hover effect -->
-      @if (showHoverEffect() && hoveredClientId()) {
-        <div
-          class="row-hover-effect"
-          [style.top.px]="Math.floor(mouseY() / 60) * 60 + 52"
-        ></div>
-      }
-
-      <!-- Mouse position hover effect -->
-      @if (showHoverEffect()) {
-        <div
-          class="mouse-hover-effect"
-          [style.left.px]="mouseX()"
-          [style.top.px]="Math.floor(mouseY() / 60) * 60 "
-        ></div>
-      }
-
       <div class="virtual-content" [style.width.px]="virtualizer.getTotalSize()">
         <!-- Date columns with headers -->
         @for (item of virtualizer.getVirtualItems(); track item.index) {
@@ -51,7 +31,7 @@
         <!-- Client rows -->
         <div class="client-rows-container">
           @for (client of clients(); track client.id; let clientIndex = $index) {
-            <div class="client-row-container" [style.top.px]="52 + clientIndex * 60">
+            <div class="client-row-container" [style.top.px]="getClientRowTop(clientIndex)">
               @for (workOrder of getWorkOrdersForClient(client.id); track workOrder.id) {
                 <div
                   class="task-wrapper"
@@ -70,6 +50,31 @@
           }
         </div>
       </div>
+    </div>
+
+    <!-- Interaction pane - fixed above scrollable content -->
+    <div
+      class="interaction-pane"
+      (mousemove)="onMouseMove($event)"
+      (mouseleave)="onMouseLeave()"
+      (click)="onClick($event)"
+    >
+      <!-- Row hover effect -->
+      @if (showHoverEffect() && hoveredClientId()) {
+        <div
+          class="row-hover-effect"
+          [style.top.px]="getRowHoverTop()"
+        ></div>
+      }
+
+      <!-- Mouse position hover effect -->
+      @if (showHoverEffect()) {
+        <div
+          class="mouse-hover-effect"
+          [style.left.px]="mouseX()"
+          [style.top.px]="getMouseHoverTop()"
+        ></div>
+      }
     </div>
 
     <!-- Customer overlay -->

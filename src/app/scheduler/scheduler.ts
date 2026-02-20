@@ -183,8 +183,16 @@ export class Scheduler {
       
       // Calculate end date as 3.5 months from start
       const endDate = new Date(startDate);
-      endDate.setMonth(endDate.getMonth() + Math.floor(this.TASK_DURATION_MONTHS));
-      endDate.setDate(endDate.getDate() + Math.round((this.TASK_DURATION_MONTHS % 1) * 30));
+      const wholeMonths = Math.floor(this.TASK_DURATION_MONTHS);
+      const partialMonth = this.TASK_DURATION_MONTHS % 1;
+      
+      endDate.setMonth(endDate.getMonth() + wholeMonths);
+      
+      // For the partial month (0.5), add half the days in the target month
+      if (partialMonth > 0) {
+        const daysInTargetMonth = new Date(endDate.getFullYear(), endDate.getMonth() + 1, 0).getDate();
+        endDate.setDate(endDate.getDate() + Math.round(daysInTargetMonth * partialMonth));
+      }
       
       // Check for overlap
       const hasOverlap = this.workOrderService.hasOverlap(

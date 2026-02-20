@@ -113,7 +113,7 @@
 }
 
 .current-period-label {
-  width: 93px;
+  min-width: 93px;
   height: 18px;
   color: rgba(62, 64, 219, 1);
   font-family: CircularStd-Book, sans-serif;
@@ -121,6 +121,7 @@
   font-weight: 400;
   line-height: 18px;
   text-align: center;
+  white-space: nowrap;
 }
 
 .work-center-rows-container {

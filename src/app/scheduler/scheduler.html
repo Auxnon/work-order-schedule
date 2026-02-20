@@ -1,12 +1,15 @@
 <div class="scheduler-wrapper">
   <!-- Timescale dropdown -->
   <div class="timescale-dropdown">
-    <select [value]="timescale()" (change)="changeTimescale($any($event.target).value)" class="timescale-select">
-      <option [value]="Timescale.Hour">Hour</option>
-      <option [value]="Timescale.Day">Day</option>
-      <option [value]="Timescale.Week">Week</option>
-      <option [value]="Timescale.Month">Month</option>
-    </select>
+    <div class="timescale-button-group">
+      <div class="timescale-label">Timescale</div>
+      <select [value]="timescale()" (change)="changeTimescale($any($event.target).value)" class="timescale-select">
+        <option [value]="Timescale.Hour">Hour</option>
+        <option [value]="Timescale.Day">Day</option>
+        <option [value]="Timescale.Week">Week</option>
+        <option [value]="Timescale.Month">Month</option>
+      </select>
+    </div>
   </div>
 
   <!-- Error message -->
@@ -20,6 +23,9 @@
     <div
       #scrollElement
       class="scroll-container"
+      (mousemove)="onMouseMove($event)"
+      (mouseleave)="onMouseLeave()"
+      (click)="onClick($event)"
     >
       <div class="virtual-content" [style.width.px]="virtualizer.getTotalSize()">
         <!-- Date columns with headers -->
@@ -31,6 +37,9 @@
           >
             <div class="column-header">
               {{ getDateForColumn(item.index).label }}
+              @if (isCurrentPeriod(item.index)) {
+                <div class="current-period-label">Current {{ getCurrentPeriodLabel() }}</div>
+              }
             </div>
           </div>
         }
@@ -39,33 +48,14 @@
         <div class="work-center-rows-container">
           @for (workCenter of workCenters(); track workCenter.id; let workCenterIndex = $index) {
             <div class="work-center-row-container" [style.top.px]="getWorkCenterRowTop(workCenterIndex)">
-              @for (workOrder of getWorkOrdersForWorkCenter(workCenter.id); track workOrder.id) {
-                <div
-                  class="task-wrapper"
-                  [style.left.px]="getTaskLeft(workOrder)"
-                  [style.width.px]="getTaskWidth(workOrder)"
-                >
-                  <app-task
-                    [workOrder]="workOrder"
-                    [workCenter]="workCenter"
-                    (edit)="onEditWorkOrder(workOrder)"
-                    (delete)="onDeleteWorkOrder(workOrder)"
-                  ></app-task>
-                </div>
-              }
             </div>
           }
         </div>
       </div>
     </div>
 
-    <!-- Interaction pane - fixed above scrollable content -->
-    <div
-      class="interaction-pane"
-      (mousemove)="onMouseMove($event)"
-      (mouseleave)="onMouseLeave()"
-      (click)="onClick($event)"
-    >
+    <!-- Interaction pane - for hover effects only (pointer-events: none) -->
+    <div class="interaction-pane">
       <!-- Row hover effect -->
       @if (showHoverEffect() && hoveredWorkCenterId()) {
         <div
@@ -81,6 +71,28 @@
           [style.left.px]="mouseX()"
           [style.top.px]="getMouseHoverTop()"
         ></div>
+      }
+    </div>
+
+    <!-- Tasks panel - above interaction pane -->
+    <div class="tasks-panel">
+      @for (workCenter of workCenters(); track workCenter.id; let workCenterIndex = $index) {
+        <div class="task-row" [style.top.px]="getWorkCenterRowTop(workCenterIndex)">
+          @for (workOrder of getWorkOrdersForWorkCenter(workCenter.id); track workOrder.id) {
+            <div
+              class="task-wrapper"
+              [style.left.px]="getTaskLeft(workOrder)"
+              [style.width.px]="getTaskWidth(workOrder)"
+            >
+              <app-task
+                [workOrder]="workOrder"
+                [workCenter]="workCenter"
+                (edit)="onEditWorkOrder(workOrder)"
+                (delete)="onDeleteWorkOrder(workOrder)"
+              ></app-task>
+            </div>
+          }
+        </div>
       }
     </div>
 

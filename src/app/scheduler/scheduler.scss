@@ -15,13 +15,32 @@
   z-index: 20;
 }
 
+.timescale-button-group {
+  display: inline-flex;
+  border-radius: 6px;
+  overflow: hidden;
+}
+
+.timescale-label {
+  padding: 8px 12px;
+  font-size: 14px;
+  background-color: rgba(241, 243, 248, 0.75);
+  color: rgba(104, 113, 150, 1);
+  display: flex;
+  align-items: center;
+  font-weight: 500;
+  border: 1px solid rgba(230, 235, 240, 1);
+  border-right: none;
+}
+
 .timescale-select {
   padding: 8px 12px;
   font-size: 14px;
   border: 1px solid rgba(230, 235, 240, 1);
-  border-radius: 6px;
+  border-radius: 0 6px 6px 0;
   outline: none;
   cursor: pointer;
+  background-color: white;
 
   &:focus {
     border-color: rgba(101, 112, 255, 1);
@@ -55,6 +74,7 @@
   position: relative;
   width: 100%;
   height: 100%;
+  cursor: pointer;
 }
 
 .virtual-content {
@@ -85,6 +105,22 @@
   overflow: hidden;
   text-overflow: ellipsis;
   pointer-events: none;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 2px;
+}
+
+.current-period-label {
+  width: 93px;
+  height: 18px;
+  color: rgba(62, 64, 219, 1);
+  font-family: CircularStd-Book, sans-serif;
+  font-size: 14px;
+  font-weight: 400;
+  line-height: 18px;
+  text-align: center;
 }
 
 .work-center-rows-container {
@@ -104,24 +140,14 @@
   pointer-events: none;
 }
 
-.task-wrapper {
-  position: absolute;
-  top: 8px;
-  height: 44px;
-  padding: 0 4px;
-  pointer-events: all;
-}
-
-// Fixed interaction pane that sits above scrollable content
-// Positioned below column headers (see HEADER_HEIGHT constant in TS)
+// Fixed interaction pane - only for hover effects (pointer-events: none)
 .interaction-pane {
   position: absolute;
   top: 52px;
   left: 0;
   right: 0;
   bottom: 0;
-  pointer-events: all;
-  cursor: pointer;
+  pointer-events: none;
   z-index: 7;
 }
 
@@ -145,4 +171,31 @@
   pointer-events: none;
   z-index: 6;
   transform: translate(-50%, -50%);
+}
+
+// Tasks panel - above interaction pane for tasks to be visible
+.tasks-panel {
+  position: absolute;
+  top: 52px;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  pointer-events: none;
+  z-index: 8;
+}
+
+.task-row {
+  position: absolute;
+  left: 0;
+  width: 100%;
+  height: 60px;
+  pointer-events: none;
+}
+
+.task-wrapper {
+  position: absolute;
+  top: 8px;
+  height: 44px;
+  padding: 0 4px;
+  pointer-events: all;
 }

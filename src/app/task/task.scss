@@ -5,10 +5,25 @@
   border-radius: 6px;
   padding: 8px 12px;
   height: 100%;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
 
   &:hover .menu-button {
     opacity: 1;
+  }
+
+  // Status-based task coloring
+  &.in-progress {
+    background-color: rgba(237, 238, 255, 1);
+    box-shadow: 0 0 0 1px rgba(222, 224, 255, 1);
+  }
+
+  &.blocked {
+    background-color: rgba(255, 251, 235, 1);
+    box-shadow: 0 0 0 1px rgba(255, 245, 207, 1);
+  }
+
+  &.complete {
+    background-color: rgba(248, 255, 243, 1);
+    box-shadow: 0 0 0 1px rgba(209, 250, 179, 1);
   }
 }
 
@@ -50,18 +65,18 @@
   }
 
   &.in-progress {
-    background-color: rgba(25, 118, 210, 0.1);
-    color: rgba(25, 118, 210, 1);
+    background-color: rgba(214, 216, 255, 1);
+    color: rgba(62, 64, 219, 1);
   }
 
   &.complete {
-    background-color: rgba(102, 187, 106, 0.1);
-    color: rgba(102, 187, 106, 1);
+    background-color: rgba(225, 255, 204, 1);
+    color: rgba(8, 162, 104, 1);
   }
 
   &.blocked {
-    background-color: rgba(211, 47, 47, 0.1);
-    color: rgba(211, 47, 47, 1);
+    background-color: rgba(252, 238, 181, 1);
+    color: rgba(177, 54, 0, 1);
   }
 }
 

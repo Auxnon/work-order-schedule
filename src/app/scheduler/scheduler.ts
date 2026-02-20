@@ -133,17 +133,30 @@ export class Scheduler {
   }
 
   onMouseMove(event: MouseEvent): void {
-    const target = event.currentTarget as HTMLElement;
-    const rect = target.getBoundingClientRect();
-    const x = event.clientX - rect.left;
-    const y = event.clientY - rect.top;
+    const scrollContainer = this.scrollElement()?.nativeElement;
+    if (!scrollContainer) return;
+    
+    const scrollRect = scrollContainer.getBoundingClientRect();
+    const scrollLeft = scrollContainer.scrollLeft || 0;
+    
+    // Calculate mouse position relative to scroll container viewport
+    const x = event.clientX - scrollRect.left;
+    const y = event.clientY - scrollRect.top;
+    
+    // Adjust for header height to align with interaction pane coordinate system
+    const adjustedY = y - this.HEADER_HEIGHT;
+    
+    if (adjustedY < 0) {
+      this.showHoverEffect.set(false);
+      return;
+    }
 
     this.mouseX.set(x);
-    this.mouseY.set(y);
+    this.mouseY.set(adjustedY);
     this.showHoverEffect.set(true);
 
     // Determine which work center row we're hovering over
-    const workCenterIndex = Math.floor(y / this.ROW_HEIGHT);
+    const workCenterIndex = Math.floor(adjustedY / this.ROW_HEIGHT);
     const workCenters = this.workCenters();
     if (workCenterIndex >= 0 && workCenterIndex < workCenters.length) {
       this.hoveredWorkCenterId.set(workCenters[workCenterIndex].id);
@@ -161,12 +174,21 @@ export class Scheduler {
     // Clear any previous error
     this.errorMessage.set('');
     
-    const target = event.currentTarget as HTMLElement;
-    const rect = target.getBoundingClientRect();
-    const x = event.clientX - rect.left;
-    const y = event.clientY - rect.top;
+    const scrollContainer = this.scrollElement()?.nativeElement;
+    if (!scrollContainer) return;
+    
+    const scrollRect = scrollContainer.getBoundingClientRect();
+    const scrollLeft = scrollContainer.scrollLeft || 0;
+    
+    const x = event.clientX - scrollRect.left;
+    const y = event.clientY - scrollRect.top;
+    
+    // Adjust for header height
+    const adjustedY = y - this.HEADER_HEIGHT;
+    
+    if (adjustedY < 0) return;
 
-    const workCenterIndex = Math.floor(y / this.ROW_HEIGHT);
+    const workCenterIndex = Math.floor(adjustedY / this.ROW_HEIGHT);
     const workCenters = this.workCenters();
 
     if (workCenterIndex >= 0 && workCenterIndex < workCenters.length) {
@@ -175,7 +197,6 @@ export class Scheduler {
       
       // Calculate start date from mouse position
       const columnWidth = this.getColumnWidth();
-      const scrollLeft = this.scrollElement()?.nativeElement.scrollLeft || 0;
       const totalX = x + scrollLeft;
       const columnIndex = Math.floor(totalX / columnWidth);
       
@@ -215,6 +236,47 @@ export class Scheduler {
         startDate,
         endDate,
       });
+    }
+  }
+
+  isCurrentPeriod(columnIndex: number): boolean {
+    const now = new Date();
+    const columnDate = this.getDateForColumn(columnIndex).date;
+    
+    switch (this.timescale()) {
+      case Timescale.Hour:
+        return now.getFullYear() === columnDate.getFullYear() &&
+               now.getMonth() === columnDate.getMonth() &&
+               now.getDate() === columnDate.getDate() &&
+               now.getHours() === columnDate.getHours();
+      case Timescale.Day:
+        return now.getFullYear() === columnDate.getFullYear() &&
+               now.getMonth() === columnDate.getMonth() &&
+               now.getDate() === columnDate.getDate();
+      case Timescale.Week:
+        const nowWeek = this.getWeekNumber(now);
+        const colWeek = this.getWeekNumber(columnDate);
+        return now.getFullYear() === columnDate.getFullYear() && nowWeek === colWeek;
+      case Timescale.Month:
+        return now.getFullYear() === columnDate.getFullYear() &&
+               now.getMonth() === columnDate.getMonth();
+      default:
+        return false;
+    }
+  }
+
+  getCurrentPeriodLabel(): string {
+    switch (this.timescale()) {
+      case Timescale.Hour:
+        return 'hour';
+      case Timescale.Day:
+        return 'day';
+      case Timescale.Week:
+        return 'week';
+      case Timescale.Month:
+        return 'month';
+      default:
+        return '';
     }
   }
 

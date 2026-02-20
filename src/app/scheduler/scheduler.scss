@@ -103,9 +103,10 @@
 }
 
 // Fixed interaction pane that sits above scrollable content
+// Positioned below column headers (see HEADER_HEIGHT constant in TS)
 .interaction-pane {
   position: absolute;
-  top: 52px; // Height of column headers
+  top: 52px;
   left: 0;
   right: 0;
   bottom: 0;

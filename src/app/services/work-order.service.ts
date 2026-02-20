@@ -13,6 +13,8 @@ export class WorkOrderService {
     { id: '5', name: 'Enterprise Systems' },
     { id: '6', name: 'Digital Ventures' },
   ]);
+  // TODO should be a UUID but a backend should decide this
+  idIncrementer = 0;
 
   private readonly workOrders = signal<WorkOrder[]>([]);
 
@@ -27,15 +29,16 @@ export class WorkOrderService {
   addWorkOrder(workOrder: Omit<WorkOrder, 'id'>): WorkOrder {
     const newWorkOrder: WorkOrder = {
       ...workOrder,
-      id: crypto.randomUUID(),
+      id: `${this.idIncrementer}`,
     };
+    this.idIncrementer++;
     this.workOrders.update((orders) => [...orders, newWorkOrder]);
     return newWorkOrder;
   }
 
   updateWorkOrder(id: string, updates: Partial<WorkOrder>): void {
     this.workOrders.update((orders) =>
-      orders.map((order) => (order.id === id ? { ...order, ...updates } : order))
+      orders.map((order) => (order.id === id ? { ...order, ...updates } : order)),
     );
   }
 
@@ -49,7 +52,7 @@ export class WorkOrderService {
 
   hasOverlap(workCenterId: string, startDate: Date, endDate: Date, excludeId?: string): boolean {
     const workCenterOrders = this.getWorkOrdersForWorkCenter(workCenterId).filter(
-      (order) => !excludeId || order.id !== excludeId
+      (order) => !excludeId || order.id !== excludeId,
     );
 
     return workCenterOrders.some((order) => {

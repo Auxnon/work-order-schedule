@@ -12,7 +12,7 @@ import { WorkOrderService } from '../services/work-order.service';
 })
 export class WorkOrderDetails {
   @Input() workOrder?: WorkOrder;
-  @Input() clientId?: string;
+  @Input() workCenterId?: string;
   @Output() close = new EventEmitter<void>();
   @Output() save = new EventEmitter<WorkOrder>();
 
@@ -71,21 +71,21 @@ export class WorkOrderDetails {
     const startDateObj = this.parseDateFromInput(this.startDate());
     const endDateObj = this.parseDateFromInput(this.endDate());
 
-    const clientId = this.clientId || this.workOrder?.clientId;
-    if (!clientId) {
+    const workCenterId = this.workCenterId || this.workOrder?.workCenterId;
+    if (!workCenterId) {
       return;
     }
 
     // Check for overlap
     const hasOverlap = this.workOrderService.hasOverlap(
-      clientId,
+      workCenterId,
       startDateObj,
       endDateObj,
       this.workOrder?.id
     );
 
     if (hasOverlap) {
-      alert('This work order overlaps with an existing work order for this client.');
+      alert('This work order overlaps with an existing work order for this work center.');
       return;
     }
 
@@ -100,7 +100,7 @@ export class WorkOrderDetails {
     } else {
       // Create new
       const newWorkOrder = this.workOrderService.addWorkOrder({
-        clientId,
+        workCenterId,
         name: this.name(),
         status: this.status(),
         startDate: startDateObj,

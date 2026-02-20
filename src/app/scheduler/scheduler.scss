@@ -28,6 +28,16 @@
   }
 }
 
+.error-message {
+  padding: 12px 16px;
+  background-color: rgba(211, 47, 47, 0.1);
+  border-left: 4px solid rgba(211, 47, 47, 1);
+  color: rgba(211, 47, 47, 1);
+  font-size: 14px;
+  font-weight: 500;
+  z-index: 20;
+}
+
 .scheduler-container {
   flex: 1;
   width: 100%;
@@ -77,7 +87,7 @@
   pointer-events: none;
 }
 
-.client-rows-container {
+.work-center-rows-container {
   position: absolute;
   top: 0;
   left: 0;
@@ -85,7 +95,7 @@
   pointer-events: none;
 }
 
-.client-row-container {
+.work-center-row-container {
   position: absolute;
   left: 0;
   width: 100%;
@@ -136,4 +146,3 @@
   z-index: 6;
   transform: translate(-50%, -50%);
 }
-

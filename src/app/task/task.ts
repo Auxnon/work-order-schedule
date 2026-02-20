@@ -1,7 +1,6 @@
 import { Component, Input, Output, EventEmitter, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { WorkOrder } from '../models/work-order.model';
-import { Client } from '../models/work-order.model';
+import { WorkOrder, WorkCenter } from '../models/work-order.model';
 
 @Component({
   selector: 'app-task',
@@ -11,7 +10,7 @@ import { Client } from '../models/work-order.model';
 })
 export class Task {
   @Input() workOrder!: WorkOrder;
-  @Input() client!: Client;
+  @Input() workCenter!: WorkCenter;
   @Output() edit = new EventEmitter<void>();
   @Output() delete = new EventEmitter<void>();
 
@@ -36,4 +35,3 @@ export class Task {
     return this.workOrder.status.toLowerCase().replaceAll(' ', '-');
   }
 }
-

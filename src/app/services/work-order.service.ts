@@ -1,11 +1,11 @@
 import { Injectable, signal } from '@angular/core';
-import { Client, WorkOrder, WorkOrderStatus } from '../models/work-order.model';
+import { WorkCenter, WorkOrder, WorkOrderStatus } from '../models/work-order.model';
 
 @Injectable({
   providedIn: 'root',
 })
 export class WorkOrderService {
-  private readonly clients = signal<Client[]>([
+  private readonly workCenters = signal<WorkCenter[]>([
     { id: '1', name: 'Acme Corporation' },
     { id: '2', name: 'TechStart Solutions' },
     { id: '3', name: 'Global Industries' },
@@ -16,8 +16,8 @@ export class WorkOrderService {
 
   private readonly workOrders = signal<WorkOrder[]>([]);
 
-  getClients() {
-    return this.clients.asReadonly();
+  getWorkCenters() {
+    return this.workCenters.asReadonly();
   }
 
   getWorkOrders() {
@@ -43,16 +43,16 @@ export class WorkOrderService {
     this.workOrders.update((orders) => orders.filter((order) => order.id !== id));
   }
 
-  getWorkOrdersForClient(clientId: string): WorkOrder[] {
-    return this.workOrders().filter((order) => order.clientId === clientId);
+  getWorkOrdersForWorkCenter(workCenterId: string): WorkOrder[] {
+    return this.workOrders().filter((order) => order.workCenterId === workCenterId);
   }
 
-  hasOverlap(clientId: string, startDate: Date, endDate: Date, excludeId?: string): boolean {
-    const clientOrders = this.getWorkOrdersForClient(clientId).filter(
+  hasOverlap(workCenterId: string, startDate: Date, endDate: Date, excludeId?: string): boolean {
+    const workCenterOrders = this.getWorkOrdersForWorkCenter(workCenterId).filter(
       (order) => !excludeId || order.id !== excludeId
     );
 
-    return clientOrders.some((order) => {
+    return workCenterOrders.some((order) => {
       return startDate < order.endDate && endDate > order.startDate;
     });
   }

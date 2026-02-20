@@ -9,6 +9,13 @@
     </select>
   </div>
 
+  <!-- Error message -->
+  @if (errorMessage()) {
+    <div class="error-message">
+      {{ errorMessage() }}
+    </div>
+  }
+
   <div class="scheduler-container">
     <div
       #scrollElement
@@ -28,11 +35,11 @@
           </div>
         }
 
-        <!-- Client rows -->
-        <div class="client-rows-container">
-          @for (client of clients(); track client.id; let clientIndex = $index) {
-            <div class="client-row-container" [style.top.px]="getClientRowTop(clientIndex)">
-              @for (workOrder of getWorkOrdersForClient(client.id); track workOrder.id) {
+        <!-- Work center rows -->
+        <div class="work-center-rows-container">
+          @for (workCenter of workCenters(); track workCenter.id; let workCenterIndex = $index) {
+            <div class="work-center-row-container" [style.top.px]="getWorkCenterRowTop(workCenterIndex)">
+              @for (workOrder of getWorkOrdersForWorkCenter(workCenter.id); track workOrder.id) {
                 <div
                   class="task-wrapper"
                   [style.left.px]="getTaskLeft(workOrder)"
@@ -40,7 +47,7 @@
                 >
                   <app-task
                     [workOrder]="workOrder"
-                    [client]="client"
+                    [workCenter]="workCenter"
                     (edit)="onEditWorkOrder(workOrder)"
                     (delete)="onDeleteWorkOrder(workOrder)"
                   ></app-task>
@@ -60,7 +67,7 @@
       (click)="onClick($event)"
     >
       <!-- Row hover effect -->
-      @if (showHoverEffect() && hoveredClientId()) {
+      @if (showHoverEffect() && hoveredWorkCenterId()) {
         <div
           class="row-hover-effect"
           [style.top.px]="getRowHoverTop()"
@@ -77,17 +84,16 @@
       }
     </div>
 
-    <!-- Customer overlay -->
-    <app-customer-overlay></app-customer-overlay>
+    <!-- Work center overlay -->
+    <app-work-center-overlay></app-work-center-overlay>
   </div>
 
   <!-- Work Order Details Sidebar -->
   @if (showWorkOrderDetails()) {
     <app-work-order-details
       [workOrder]="selectedWorkOrder()"
-      [clientId]="selectedClientId()"
+      [workCenterId]="selectedWorkCenterId()"
       (close)="onCloseDetails()"
     ></app-work-order-details>
   }
 </div>
-

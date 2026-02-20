@@ -1,0 +1,9 @@
+<div class="work-center-overlay">
+  <div class="work-center-list">
+    @for (workCenter of workCenters(); track workCenter.id) {
+      <div class="work-center-row" [attr.data-work-center-id]="workCenter.id">
+        <span class="work-center-name">{{ workCenter.name }}</span>
+      </div>
+    }
+  </div>
+</div>

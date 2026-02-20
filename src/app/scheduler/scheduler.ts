@@ -1,11 +1,11 @@
 import { Component, ElementRef, signal, viewChild, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { injectVirtualizer } from '@tanstack/angular-virtual';
-import { CustomerOverlay } from '../customer-overlay/customer-overlay';
+import { WorkCenterOverlay } from '../work-center-overlay/work-center-overlay';
 import { Task } from '../task/task';
 import { WorkOrderDetails } from '../work-order-details/work-order-details';
 import { WorkOrderService } from '../services/work-order.service';
-import { WorkOrder } from '../models/work-order.model';
+import { WorkOrder, WorkOrderStatus } from '../models/work-order.model';
 
 export enum Timescale {
   Hour = 'hour',
@@ -21,7 +21,7 @@ interface DateColumn {
 
 @Component({
   selector: 'app-scheduler',
-  imports: [CommonModule, CustomerOverlay, Task, WorkOrderDetails],
+  imports: [CommonModule, WorkCenterOverlay, Task, WorkOrderDetails],
   templateUrl: './scheduler.html',
   styleUrl: './scheduler.scss',
 })
@@ -31,6 +31,7 @@ export class Scheduler {
   private readonly HEADER_HEIGHT = 52;
   private readonly ROW_HEIGHT = 60;
   private readonly MIN_TASK_WIDTH_RATIO = 0.3;
+  private readonly TASK_DURATION_MONTHS = 3.5;
 
   private workOrderService = inject(WorkOrderService);
 
@@ -41,7 +42,7 @@ export class Scheduler {
   scrollElement = viewChild<ElementRef<HTMLDivElement>>('scrollElement');
 
   // Hover state
-  hoveredClientId = signal<string | null>(null);
+  hoveredWorkCenterId = signal<string | null>(null);
   mouseX = signal<number>(0);
   mouseY = signal<number>(0);
   showHoverEffect = signal<boolean>(false);
@@ -49,9 +50,12 @@ export class Scheduler {
   // Modal state
   showWorkOrderDetails = signal<boolean>(false);
   selectedWorkOrder = signal<WorkOrder | undefined>(undefined);
-  selectedClientId = signal<string | undefined>(undefined);
+  selectedWorkCenterId = signal<string | undefined>(undefined);
+  
+  // Error message
+  errorMessage = signal<string>('');
 
-  clients = this.workOrderService.getClients();
+  workCenters = this.workOrderService.getWorkCenters();
   workOrders = this.workOrderService.getWorkOrders();
 
   virtualizer = injectVirtualizer(() => ({
@@ -138,46 +142,83 @@ export class Scheduler {
     this.mouseY.set(y);
     this.showHoverEffect.set(true);
 
-    // Determine which client row we're hovering over
-    const clientIndex = Math.floor(y / this.ROW_HEIGHT);
-    const clients = this.clients();
-    if (clientIndex >= 0 && clientIndex < clients.length) {
-      this.hoveredClientId.set(clients[clientIndex].id);
+    // Determine which work center row we're hovering over
+    const workCenterIndex = Math.floor(y / this.ROW_HEIGHT);
+    const workCenters = this.workCenters();
+    if (workCenterIndex >= 0 && workCenterIndex < workCenters.length) {
+      this.hoveredWorkCenterId.set(workCenters[workCenterIndex].id);
     } else {
-      this.hoveredClientId.set(null);
+      this.hoveredWorkCenterId.set(null);
     }
   }
 
   onMouseLeave(): void {
     this.showHoverEffect.set(false);
-    this.hoveredClientId.set(null);
+    this.hoveredWorkCenterId.set(null);
   }
 
   onClick(event: MouseEvent): void {
+    // Clear any previous error
+    this.errorMessage.set('');
+    
     const target = event.currentTarget as HTMLElement;
     const rect = target.getBoundingClientRect();
+    const x = event.clientX - rect.left;
     const y = event.clientY - rect.top;
 
-    const clientIndex = Math.floor(y / this.ROW_HEIGHT);
-    const clients = this.clients();
+    const workCenterIndex = Math.floor(y / this.ROW_HEIGHT);
+    const workCenters = this.workCenters();
 
-    if (clientIndex >= 0 && clientIndex < clients.length) {
-      const clientId = clients[clientIndex].id;
-      this.selectedClientId.set(clientId);
-      this.selectedWorkOrder.set(undefined);
-      this.showWorkOrderDetails.set(true);
+    if (workCenterIndex >= 0 && workCenterIndex < workCenters.length) {
+      const workCenterId = workCenters[workCenterIndex].id;
+      const workCenterName = workCenters[workCenterIndex].name;
+      
+      // Calculate start date from mouse position
+      const columnWidth = this.getColumnWidth();
+      const scrollLeft = this.scrollElement()?.nativeElement.scrollLeft || 0;
+      const totalX = x + scrollLeft;
+      const columnIndex = Math.floor(totalX / columnWidth);
+      
+      const startDate = this.getDateForColumn(columnIndex).date;
+      
+      // Calculate end date as 3.5 months from start
+      const endDate = new Date(startDate);
+      endDate.setMonth(endDate.getMonth() + Math.floor(this.TASK_DURATION_MONTHS));
+      endDate.setDate(endDate.getDate() + Math.round((this.TASK_DURATION_MONTHS % 1) * 30));
+      
+      // Check for overlap
+      const hasOverlap = this.workOrderService.hasOverlap(
+        workCenterId,
+        startDate,
+        endDate
+      );
+      
+      if (hasOverlap) {
+        this.errorMessage.set(`Cannot create task: overlaps with existing task for ${workCenterName}`);
+        setTimeout(() => this.errorMessage.set(''), 5000);
+        return;
+      }
+      
+      // Create the work order automatically
+      this.workOrderService.addWorkOrder({
+        workCenterId,
+        name: workCenterName,
+        status: WorkOrderStatus.InProgress,
+        startDate,
+        endDate,
+      });
     }
   }
 
   onCloseDetails(): void {
     this.showWorkOrderDetails.set(false);
     this.selectedWorkOrder.set(undefined);
-    this.selectedClientId.set(undefined);
+    this.selectedWorkCenterId.set(undefined);
   }
 
   onEditWorkOrder(workOrder: WorkOrder): void {
     this.selectedWorkOrder.set(workOrder);
-    this.selectedClientId.set(workOrder.clientId);
+    this.selectedWorkCenterId.set(workOrder.workCenterId);
     this.showWorkOrderDetails.set(true);
   }
 
@@ -187,8 +228,8 @@ export class Scheduler {
     }
   }
 
-  getWorkOrdersForClient(clientId: string): WorkOrder[] {
-    return this.workOrders().filter(order => order.clientId === clientId);
+  getWorkOrdersForWorkCenter(workCenterId: string): WorkOrder[] {
+    return this.workOrders().filter(order => order.workCenterId === workCenterId);
   }
 
   changeTimescale(timescale: Timescale): void {
@@ -196,18 +237,18 @@ export class Scheduler {
   }
 
   // Position calculation methods
-  getClientRowTop(clientIndex: number): number {
-    return this.HEADER_HEIGHT + clientIndex * this.ROW_HEIGHT;
+  getWorkCenterRowTop(workCenterIndex: number): number {
+    return this.HEADER_HEIGHT + workCenterIndex * this.ROW_HEIGHT;
   }
 
   getRowHoverTop(): number {
-    const clientIndex = Math.floor(this.mouseY() / this.ROW_HEIGHT);
-    return clientIndex * this.ROW_HEIGHT;
+    const workCenterIndex = Math.floor(this.mouseY() / this.ROW_HEIGHT);
+    return workCenterIndex * this.ROW_HEIGHT;
   }
 
   getMouseHoverTop(): number {
-    const clientIndex = Math.floor(this.mouseY() / this.ROW_HEIGHT);
-    return clientIndex * this.ROW_HEIGHT + this.ROW_HEIGHT / 2;
+    const workCenterIndex = Math.floor(this.mouseY() / this.ROW_HEIGHT);
+    return workCenterIndex * this.ROW_HEIGHT + this.ROW_HEIGHT / 2;
   }
 
   getTaskLeft(workOrder: WorkOrder): number {

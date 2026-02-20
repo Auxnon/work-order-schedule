@@ -5,14 +5,14 @@ export enum WorkOrderStatus {
   Blocked = 'Blocked',
 }
 
-export interface Client {
+export interface WorkCenter {
   id: string;
   name: string;
 }
 
 export interface WorkOrder {
   id: string;
-  clientId: string;
+  workCenterId: string;
   name: string;
   status: WorkOrderStatus;
   startDate: Date;

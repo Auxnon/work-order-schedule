@@ -5,16 +5,22 @@ export enum WorkOrderStatus {
   Blocked = 'Blocked',
 }
 
-export interface WorkCenter {
-  id: string;
-  name: string;
+export interface WorkCenterDocument {
+  docId: string;
+  docType: 'workCenter';
+  data: {
+    name: string;
+  };
 }
 
-export interface WorkOrder {
-  id: string;
-  workCenterId: string;
-  name: string;
-  status: WorkOrderStatus;
-  startDate: Date;
-  endDate: Date;
+export interface WorkOrderDocument {
+  docId: string;
+  docType: 'workOrder';
+  data: {
+    name: string;
+    workCenterId: string;
+    status: WorkOrderStatus;
+    startDate: string; // ISO format (e.g., "2025-01-15")
+    endDate: string;   // ISO format
+  };
 }

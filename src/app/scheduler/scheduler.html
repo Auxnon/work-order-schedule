@@ -45,7 +45,7 @@
 
         <!-- Work center rows -->
         <div class="work-center-rows-container">
-          @for (workCenter of workCenters(); track workCenter.id; let workCenterIndex = $index) {
+          @for (workCenter of workCenters(); track workCenter.docId; let workCenterIndex = $index) {
             <div class="work-center-row-container" [style.top.px]="getWorkCenterRowTop(workCenterIndex)">
             </div>
           }
@@ -53,9 +53,9 @@
       </div>
 <!-- Tasks panel - above interaction pane -->
     <div class="tasks-panel">
-      @for (workCenter of workCenters(); track workCenter.id; let workCenterIndex = $index) {
+      @for (workCenter of workCenters(); track workCenter.docId; let workCenterIndex = $index) {
         <div class="task-row" [style.top.px]="getWorkCenterRowTop(workCenterIndex)">
-          @for (workOrder of getWorkOrdersForWorkCenter(workCenter.id); track workOrder.id) {
+          @for (workOrder of getWorkOrdersForWorkCenter(workCenter.docId); track workOrder.docId) {
             <div
               class="task-wrapper"
               [style.left.px]="getTaskLeft(workOrder)"
@@ -105,6 +105,8 @@
     <app-work-order-details
       [workOrder]="selectedWorkOrder()"
       [workCenterId]="selectedWorkCenterId()"
+      [defaultStartDate]="selectedDefaultStartDate()"
+      [defaultEndDate]="selectedDefaultEndDate()"
       (close)="onCloseDetails()"
     ></app-work-order-details>
   }

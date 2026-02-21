@@ -69,8 +69,6 @@ export class Scheduler {
     // Initialize date range and scroll position whenever timescale or work orders change
     effect(() => {
       this.updateDateRangeAndScroll();
-      // Trigger by accessing workOrders to react to changes
-      this.workOrders();
     });
   }
 
@@ -79,17 +77,17 @@ export class Scheduler {
     const now = new Date();
     
     // Calculate min and max dates from work orders
-    let minDate: Date | undefined = undefined;
-    let maxDate: Date | undefined = undefined;
+    let minDate: Date | undefined;
+    let maxDate: Date | undefined;
     
-    orders.forEach(order => {
+    for (const order of orders) {
       if (!minDate || order.startDate < minDate) {
         minDate = order.startDate;
       }
       if (!maxDate || order.endDate > maxDate) {
         maxDate = order.endDate;
       }
-    });
+    }
     
     // Determine base date and column count based on timescale
     let baseDate: Date;
@@ -143,11 +141,9 @@ export class Scheduler {
         break;
         
       case Timescale.Month:
-        if (minDate !== undefined && maxDate !== undefined) {
-          const minD: Date = minDate;
-          const maxD: Date = maxDate;
-          const minYearMonth = (minD.getFullYear() * 12) + minD.getMonth() - buffer;
-          const maxYearMonth = (maxD.getFullYear() * 12) + maxD.getMonth() + buffer;
+        if (minDate && maxDate) {
+          const minYearMonth = (minDate!.getFullYear() * 12) + minDate!.getMonth() - buffer;
+          const maxYearMonth = (maxDate!.getFullYear() * 12) + maxDate!.getMonth() + buffer;
           
           baseDate = new Date();
           baseDate.setFullYear(Math.floor(minYearMonth / 12));
@@ -174,10 +170,10 @@ export class Scheduler {
     this.baseDate.set(baseDate);
     this.columnCount.set(columnCount);
     
-    // Scroll to current period after a short delay to ensure DOM is ready
-    setTimeout(() => {
+    // Scroll to current period after DOM is ready
+    requestAnimationFrame(() => {
       this.scrollToColumn(currentColumnIndex);
-    }, 100);
+    });
   }
   
   private scrollToColumn(columnIndex: number): void {

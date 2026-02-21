@@ -51,7 +51,7 @@ export class Scheduler {
   showWorkOrderDetails = signal<boolean>(false);
   selectedWorkOrder = signal<WorkOrder | undefined>(undefined);
   selectedWorkCenterId = signal<string | undefined>(undefined);
-  
+
   // Error message
   errorMessage = signal<string>('');
 
@@ -135,17 +135,17 @@ export class Scheduler {
   onMouseMove(event: MouseEvent): void {
     const scrollContainer = this.scrollElement()?.nativeElement;
     if (!scrollContainer) return;
-    
+
     const scrollRect = scrollContainer.getBoundingClientRect();
     const scrollLeft = scrollContainer.scrollLeft || 0;
-    
+
     // Calculate mouse position relative to scroll container viewport
     const x = event.clientX - scrollRect.left;
     const y = event.clientY - scrollRect.top;
-    
+
     // Adjust for header height to align with interaction pane coordinate system
     const adjustedY = y - this.HEADER_HEIGHT;
-    
+
     if (adjustedY < 0) {
       this.showHoverEffect.set(false);
       return;
@@ -173,19 +173,19 @@ export class Scheduler {
   onClick(event: MouseEvent): void {
     // Clear any previous error
     this.errorMessage.set('');
-    
+
     const scrollContainer = this.scrollElement()?.nativeElement;
     if (!scrollContainer) return;
-    
+
     const scrollRect = scrollContainer.getBoundingClientRect();
     const scrollLeft = scrollContainer.scrollLeft || 0;
-    
+
     const x = event.clientX - scrollRect.left;
     const y = event.clientY - scrollRect.top;
-    
+
     // Adjust for header height
     const adjustedY = y - this.HEADER_HEIGHT;
-    
+
     if (adjustedY < 0) return;
 
     const workCenterIndex = Math.floor(adjustedY / this.ROW_HEIGHT);
@@ -194,40 +194,40 @@ export class Scheduler {
     if (workCenterIndex >= 0 && workCenterIndex < workCenters.length) {
       const workCenterId = workCenters[workCenterIndex].id;
       const workCenterName = workCenters[workCenterIndex].name;
-      
+
       // Calculate start date from mouse position
       const columnWidth = this.getColumnWidth();
       const totalX = x + scrollLeft;
       const columnIndex = Math.floor(totalX / columnWidth);
-      
+
       const startDate = this.getDateForColumn(columnIndex).date;
-      
+
       // Calculate end date as 3.5 months from start
       const endDate = new Date(startDate);
       const wholeMonths = Math.floor(this.TASK_DURATION_MONTHS);
       const partialMonth = this.TASK_DURATION_MONTHS % 1;
-      
+
       endDate.setMonth(endDate.getMonth() + wholeMonths);
-      
+
       // For the partial month (0.5), add half the days in the target month
       if (partialMonth > 0) {
         const daysInTargetMonth = new Date(endDate.getFullYear(), endDate.getMonth() + 1, 0).getDate();
         endDate.setDate(endDate.getDate() + Math.round(daysInTargetMonth * partialMonth));
       }
-      
+
       // Check for overlap
       const hasOverlap = this.workOrderService.hasOverlap(
         workCenterId,
         startDate,
         endDate
       );
-      
+
       if (hasOverlap) {
         this.errorMessage.set(`Cannot create task: overlaps with existing task for ${workCenterName}`);
         setTimeout(() => this.errorMessage.set(''), 5000);
         return;
       }
-      
+
       // Create the work order automatically
       this.workOrderService.addWorkOrder({
         workCenterId,
@@ -242,7 +242,7 @@ export class Scheduler {
   isCurrentPeriod(columnIndex: number): boolean {
     const now = new Date();
     const columnDate = this.getDateForColumn(columnIndex).date;
-    
+
     switch (this.timescale()) {
       case Timescale.Hour:
         return now.getFullYear() === columnDate.getFullYear() &&
@@ -308,7 +308,7 @@ export class Scheduler {
 
   // Position calculation methods
   getWorkCenterRowTop(workCenterIndex: number): number {
-    return this.HEADER_HEIGHT + workCenterIndex * this.ROW_HEIGHT;
+    return workCenterIndex * this.ROW_HEIGHT;
   }
 
   getRowHoverTop(): number {

@@ -52,6 +52,27 @@
           }
         </div>
       </div>
+<!-- Tasks panel - above interaction pane -->
+    <div class="tasks-panel">
+      @for (workCenter of workCenters(); track workCenter.id; let workCenterIndex = $index) {
+        <div class="task-row" [style.top.px]="getWorkCenterRowTop(workCenterIndex)">
+          @for (workOrder of getWorkOrdersForWorkCenter(workCenter.id); track workOrder.id) {
+            <div
+              class="task-wrapper"
+              [style.left.px]="getTaskLeft(workOrder)"
+              [style.width.px]="getTaskWidth(workOrder)"
+            >
+              <app-task
+                [workOrder]="workOrder"
+                [workCenter]="workCenter"
+                (edit)="onEditWorkOrder(workOrder)"
+                (delete)="onDeleteWorkOrder(workOrder)"
+              ></app-task>
+            </div>
+          }
+        </div>
+      }
+    </div>
     </div>
 
     <!-- Interaction pane - for hover effects only (pointer-events: none) -->
@@ -74,27 +95,7 @@
       }
     </div>
 
-    <!-- Tasks panel - above interaction pane -->
-    <div class="tasks-panel">
-      @for (workCenter of workCenters(); track workCenter.id; let workCenterIndex = $index) {
-        <div class="task-row" [style.top.px]="getWorkCenterRowTop(workCenterIndex)">
-          @for (workOrder of getWorkOrdersForWorkCenter(workCenter.id); track workOrder.id) {
-            <div
-              class="task-wrapper"
-              [style.left.px]="getTaskLeft(workOrder)"
-              [style.width.px]="getTaskWidth(workOrder)"
-            >
-              <app-task
-                [workOrder]="workOrder"
-                [workCenter]="workCenter"
-                (edit)="onEditWorkOrder(workOrder)"
-                (delete)="onDeleteWorkOrder(workOrder)"
-              ></app-task>
-            </div>
-          }
-        </div>
-      }
-    </div>
+
 
     <!-- Work center overlay -->
     <app-work-center-overlay></app-work-center-overlay>

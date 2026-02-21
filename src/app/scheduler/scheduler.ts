@@ -5,7 +5,7 @@ import { WorkCenterOverlay } from '../work-center-overlay/work-center-overlay';
 import { Task } from '../task/task';
 import { WorkOrderDetails } from '../work-order-details/work-order-details';
 import { WorkOrderService } from '../services/work-order.service';
-import { WorkOrder, WorkOrderStatus } from '../models/work-order.model';
+import { WorkOrderDocument } from '../models/work-order.model';
 
 export enum Timescale {
   Day = 'day',
@@ -30,7 +30,6 @@ export class Scheduler {
   private readonly HEADER_HEIGHT = 52;
   private readonly ROW_HEIGHT = 60;
   private readonly MIN_TASK_WIDTH_RATIO = 0.3;
-  private readonly TASK_DURATION_MONTHS = 3.5;
 
   private workOrderService = inject(WorkOrderService);
 
@@ -48,8 +47,10 @@ export class Scheduler {
 
   // Modal state
   showWorkOrderDetails = signal<boolean>(false);
-  selectedWorkOrder = signal<WorkOrder | undefined>(undefined);
+  selectedWorkOrder = signal<WorkOrderDocument | undefined>(undefined);
   selectedWorkCenterId = signal<string | undefined>(undefined);
+  selectedDefaultStartDate = signal<string | undefined>(undefined);
+  selectedDefaultEndDate = signal<string | undefined>(undefined);
 
   // Error message
   errorMessage = signal<string>('');
@@ -81,11 +82,13 @@ export class Scheduler {
     let maxDate: Date | undefined;
     
     for (const order of orders) {
-      if (!minDate || order.startDate < minDate) {
-        minDate = order.startDate;
+      const start = this.parseIsoDate(order.data.startDate);
+      const end = this.parseIsoDate(order.data.endDate);
+      if (!minDate || start < minDate) {
+        minDate = start;
       }
-      if (!maxDate || order.endDate > maxDate) {
-        maxDate = order.endDate;
+      if (!maxDate || end > maxDate) {
+        maxDate = end;
       }
     }
     
@@ -198,6 +201,17 @@ export class Scheduler {
     }
   }
 
+  private parseIsoDate(dateStr: string): Date {
+    return new Date(dateStr + 'T00:00:00');
+  }
+
+  private toIsoDate(date: Date): string {
+    const year = date.getFullYear();
+    const month = String(date.getMonth() + 1).padStart(2, '0');
+    const day = String(date.getDate()).padStart(2, '0');
+    return `${year}-${month}-${day}`;
+  }
+
   getDateForColumn(index: number): DateColumn {
     const base = this.baseDate();
     let date: Date;
@@ -276,7 +290,7 @@ export class Scheduler {
     const workCenterIndex = Math.floor(adjustedY / this.ROW_HEIGHT);
     const workCenters = this.workCenters();
     if (workCenterIndex >= 0 && workCenterIndex < workCenters.length) {
-      this.hoveredWorkCenterId.set(workCenters[workCenterIndex].id);
+      this.hoveredWorkCenterId.set(workCenters[workCenterIndex].docId);
     } else {
       this.hoveredWorkCenterId.set(null);
     }
@@ -291,7 +305,7 @@ export class Scheduler {
     // Check if click is on a task or work center overlay
     const target = event.target as HTMLElement;
     if (this.isOverTaskOrOverlay(target)) {
-      return; // Don't create task if clicking on task or overlay
+      return; // Don't open sidebar if clicking on task or overlay
     }
 
     // Clear any previous error
@@ -315,8 +329,7 @@ export class Scheduler {
     const workCenters = this.workCenters();
 
     if (workCenterIndex >= 0 && workCenterIndex < workCenters.length) {
-      const workCenterId = workCenters[workCenterIndex].id;
-      const workCenterName = workCenters[workCenterIndex].name;
+      const workCenterId = workCenters[workCenterIndex].docId;
 
       // Calculate start date from mouse position
       const columnWidth = this.getColumnWidth();
@@ -325,40 +338,29 @@ export class Scheduler {
 
       const startDate = this.getDateForColumn(columnIndex).date;
 
-      // Calculate end date as 3.5 months from start
+      // Calculate end date as exactly one timescale unit from start
       const endDate = new Date(startDate);
-      const wholeMonths = Math.floor(this.TASK_DURATION_MONTHS);
-      const partialMonth = this.TASK_DURATION_MONTHS % 1;
-
-      endDate.setMonth(endDate.getMonth() + wholeMonths);
-
-      // For the partial month (0.5), add half the days in the target month
-      if (partialMonth > 0) {
-        const daysInTargetMonth = new Date(endDate.getFullYear(), endDate.getMonth() + 1, 0).getDate();
-        endDate.setDate(endDate.getDate() + Math.round(daysInTargetMonth * partialMonth));
+      switch (this.timescale()) {
+        case Timescale.Day:
+          endDate.setDate(endDate.getDate() + 1);
+          break;
+        case Timescale.Week:
+          endDate.setDate(endDate.getDate() + 7);
+          break;
+        case Timescale.Month:
+          endDate.setMonth(endDate.getMonth() + 1);
+          break;
+        default:
+          endDate.setDate(endDate.getDate() + 1);
+          break;
       }
 
-      // Check for overlap
-      const hasOverlap = this.workOrderService.hasOverlap(
-        workCenterId,
-        startDate,
-        endDate
-      );
-
-      if (hasOverlap) {
-        this.errorMessage.set(`Cannot create task: overlaps with existing task for ${workCenterName}`);
-        setTimeout(() => this.errorMessage.set(''), 5000);
-        return;
-      }
-
-      // Create the work order automatically
-      this.workOrderService.addWorkOrder({
-        workCenterId,
-        name: workCenterName,
-        status: WorkOrderStatus.InProgress,
-        startDate,
-        endDate,
-      });
+      // Open the sidebar with pre-filled dates
+      this.selectedWorkOrder.set(undefined);
+      this.selectedWorkCenterId.set(workCenterId);
+      this.selectedDefaultStartDate.set(this.toIsoDate(startDate));
+      this.selectedDefaultEndDate.set(this.toIsoDate(endDate));
+      this.showWorkOrderDetails.set(true);
     }
   }
 
@@ -416,22 +418,26 @@ export class Scheduler {
     this.showWorkOrderDetails.set(false);
     this.selectedWorkOrder.set(undefined);
     this.selectedWorkCenterId.set(undefined);
+    this.selectedDefaultStartDate.set(undefined);
+    this.selectedDefaultEndDate.set(undefined);
   }
 
-  onEditWorkOrder(workOrder: WorkOrder): void {
+  onEditWorkOrder(workOrder: WorkOrderDocument): void {
     this.selectedWorkOrder.set(workOrder);
-    this.selectedWorkCenterId.set(workOrder.workCenterId);
+    this.selectedWorkCenterId.set(workOrder.data.workCenterId);
+    this.selectedDefaultStartDate.set(undefined);
+    this.selectedDefaultEndDate.set(undefined);
     this.showWorkOrderDetails.set(true);
   }
 
-  onDeleteWorkOrder(workOrder: WorkOrder): void {
+  onDeleteWorkOrder(workOrder: WorkOrderDocument): void {
     if (confirm('Are you sure you want to delete this work order?')) {
-      this.workOrderService.deleteWorkOrder(workOrder.id);
+      this.workOrderService.deleteWorkOrder(workOrder.docId);
     }
   }
 
-  getWorkOrdersForWorkCenter(workCenterId: string): WorkOrder[] {
-    return this.workOrders().filter(order => order.workCenterId === workCenterId);
+  getWorkOrdersForWorkCenter(workCenterId: string): WorkOrderDocument[] {
+    return this.workOrders().filter(order => order.data.workCenterId === workCenterId);
   }
 
   changeTimescale(timescale: Timescale): void {
@@ -453,9 +459,9 @@ export class Scheduler {
     return workCenterIndex * this.ROW_HEIGHT + this.ROW_HEIGHT / 2;
   }
 
-  getTaskLeft(workOrder: WorkOrder): number {
+  getTaskLeft(workOrder: WorkOrderDocument): number {
     const baseDate = this.baseDate();
-    const startDate = workOrder.startDate;
+    const startDate = this.parseIsoDate(workOrder.data.startDate);
     const columnWidth = this.getColumnWidth();
 
     let offset: number; // Offset in fractional units (can be decimal)
@@ -485,9 +491,9 @@ export class Scheduler {
     return Math.max(0, offset * columnWidth);
   }
 
-  getTaskWidth(workOrder: WorkOrder): number {
-    const startDate = workOrder.startDate;
-    const endDate = workOrder.endDate;
+  getTaskWidth(workOrder: WorkOrderDocument): number {
+    const startDate = this.parseIsoDate(workOrder.data.startDate);
+    const endDate = this.parseIsoDate(workOrder.data.endDate);
     const columnWidth = this.getColumnWidth();
 
     let duration: number; // Duration in fractional units (can be decimal)

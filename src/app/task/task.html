@@ -1,8 +1,8 @@
 <div class="task-card" [class]="getStatusClass()">
   <div class="task-content">
-    <span class="work-center-name">{{ workCenter.name }}</span>
+    <span class="work-center-name">{{ workCenter.data.name }}</span>
     <div class="task-actions">
-      <span class="status-tag" [class]="getStatusClass()">{{ workOrder.status }}</span>
+      <span class="status-tag" [class]="getStatusClass()">{{ workOrder.data.status }}</span>
       <button class="menu-button" (click)="toggleMenu($event)">⋮</button>
     </div>
   </div>

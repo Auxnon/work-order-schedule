@@ -1,9 +1,75 @@
-.scheduler-container {
+.scheduler-wrapper {
   width: 100%;
   height: 100vh;
   display: flex;
   flex-direction: column;
+  position: relative;
+  left: 0;
+  top: 0;
+}
+
+.timescale-dropdown {
+  padding: 16px;
+  background-color: white;
+  border-bottom: 1px solid rgba(230, 235, 240, 1);
+  z-index: 20;
+}
+
+.timescale-button-group {
+  display: inline-flex;
+  border-radius: 6px;
   overflow: hidden;
+  box-shadow: 1px 2.5px 3px -1.5px rgba(200, 207, 233, 1);
+}
+
+.timescale-label {
+  padding: 0px 8px;
+  font-size: 13px;
+  background-color: rgba(241, 243, 248, 0.75);
+  color: rgba(104, 113, 150, 1);
+  display: flex;
+  align-items: center;
+  font-weight: 400;
+}
+
+.timescale-select {
+  padding: 8px 12px;
+  font-size: 13px;
+  color: rgba(62, 64, 219, 1);
+  border: 1px solid rgba(230, 235, 240, 1);
+  border-radius: 0 6px 6px 0;
+  outline: none;
+  cursor: pointer;
+  background-color: white;
+  font-weight: 500;
+  &:focus {
+    border-color: rgba(101, 112, 255, 1);
+  }
+}
+
+.error-message {
+  position: absolute;
+  top: 64px; // Below timescale dropdown
+  left: 0px;
+  right: 0px;
+  padding: 12px 16px;
+  background-color: rgba(251,234,234,1);//rgba(211, 47, 47, 0.1);
+  border-left: 4px solid rgba(211, 47, 47, 1);
+  color: rgba(211, 47, 47, 1);
+  font-size: 14px;
+  font-weight: 500;
+  z-index: 100;
+  pointer-events: none;
+}
+
+.scheduler-container {
+  flex: 1;
+  width: 100%;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  position: relative;
 }
 
 .scroll-container {
@@ -13,11 +79,13 @@
   position: relative;
   width: 100%;
   height: 100%;
+  cursor: pointer;
 }
 
 .virtual-content {
   position: relative;
   height: 100%;
+  min-height: calc(52px + 6 * 60px);
 }
 
 .date-column {
@@ -27,11 +95,11 @@
   height: 100%;
   background-color: #f7f9fc;
   border-right: 1px solid rgba(230, 235, 240, 1);
-  display: flex;
-  flex-direction: column;
+  pointer-events: none;
 }
 
 .column-header {
+  height: 52px;
   padding: 16px 12px;
   font-weight: 600;
   font-size: 14px;
@@ -41,10 +109,99 @@
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
+  pointer-events: none;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 2px;
 }
 
-.column-content {
-  flex: 1;
-  overflow-y: auto;
-  padding: 8px;
+.current-period-label {
+  min-width: 93px;
+  height: 18px;
+  color: rgba(62, 64, 219, 1);
+  font-size: 14px;
+  font-weight: 400;
+  line-height: 18px;
+  text-align: center;
+  white-space: nowrap;
+}
+
+.work-center-rows-container {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  pointer-events: none;
+}
+
+.work-center-row-container {
+  position: absolute;
+  left: 0;
+  width: 100%;
+  height: 60px;
+  border-bottom: 1px solid rgba(230, 235, 240, 1);
+  pointer-events: none;
+}
+
+// Fixed interaction pane - only for hover effects (pointer-events: none)
+.interaction-pane {
+  position: absolute;
+  top: 52px;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  pointer-events: none;
+  z-index: 7;
+}
+
+.row-hover-effect {
+  position: absolute;
+  left: 0;
+  width: 100%;
+  height: 60px;
+  background-color: rgba(238, 240, 255, 1);
+  pointer-events: none;
+  z-index: 5;
+}
+
+.mouse-hover-effect {
+  position: absolute;
+  width: 113px;
+  height: 38px;
+  border: 1px solid rgba(195, 199, 255, 1);
+  border-radius: 8px;
+  background-color: rgba(101, 112, 255, 0.1);
+  pointer-events: none;
+  z-index: 6;
+  transform: translate(-50%, -50%);
+}
+
+// Tasks panel - above interaction pane for tasks to be visible
+.tasks-panel {
+  position: absolute;
+  width: 100%;
+  top: 52px;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  pointer-events: none;
+  z-index: 8;
+}
+
+.task-row {
+  position: absolute;
+  left: 0;
+  width: 100%;
+  height: 60px;
+  pointer-events: none;
+}
+
+.task-wrapper {
+  position: absolute;
+  top: 8px;
+  height: 44px;
+  padding: 0 4px;
+  pointer-events: all;
 }

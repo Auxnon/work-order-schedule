@@ -1,0 +1,54 @@
+<div class="modal-overlay" (click)="onCancel()">
+  <div class="sidebar" (click)="$event.stopPropagation()">
+    <div class="sidebar-header">
+      <button class="btn btn-secondary" (click)="onCancel()">Cancel</button>
+      <button class="btn btn-primary" (click)="onSave()">
+        {{ workOrder ? 'Update' : 'Create' }}
+      </button>
+    </div>
+
+    <div class="sidebar-content">
+      <div class="form-group">
+        <label for="workOrderName">Work Order Name</label>
+        <input
+          id="workOrderName"
+          type="text"
+          class="form-control"
+          [(ngModel)]="name"
+          placeholder="Enter work order name"
+        />
+      </div>
+
+      <div class="form-group">
+        <label for="status">Status</label>
+        <select id="status" class="form-control" [(ngModel)]="status">
+          @for (statusOption of statuses; track statusOption) {
+            <option [value]="statusOption">{{ statusOption }}</option>
+          }
+        </select>
+      </div>
+
+      <div class="form-group">
+        <label for="startDate">Start Date</label>
+        <input
+          id="startDate"
+          type="text"
+          class="form-control"
+          [(ngModel)]="startDate"
+          placeholder="MM.DD.YYYY"
+        />
+      </div>
+
+      <div class="form-group">
+        <label for="endDate">End Date</label>
+        <input
+          id="endDate"
+          type="text"
+          class="form-control"
+          [(ngModel)]="endDate"
+          placeholder="MM.DD.YYYY"
+        />
+      </div>
+    </div>
+  </div>
+</div>

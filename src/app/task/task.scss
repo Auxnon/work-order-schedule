@@ -1,0 +1,132 @@
+.task-card {
+  position: relative;
+  background-color: white;
+  border: 1px solid rgba(230, 235, 240, 1);
+  border-radius: 6px;
+  padding: 8px 12px;
+  height: 100%;
+
+  &:hover .menu-button {
+    opacity: 1;
+  }
+
+  // Status-based task coloring
+  &.in-progress {
+    background-color: rgba(237, 238, 255, 1);
+    box-shadow: 0 0 0 1px rgba(222, 224, 255, 1);
+  }
+
+  &.blocked {
+    background-color: rgba(255, 251, 235, 1);
+    box-shadow: 0 0 0 1px rgba(255, 245, 207, 1);
+  }
+
+  &.complete {
+    background-color: rgba(248, 255, 243, 1);
+    box-shadow: 0 0 0 1px rgba(209, 250, 179, 1);
+  }
+}
+
+.task-content {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 8px;
+  height: 100%;
+}
+
+.work-center-name {
+  font-size: 13px;
+  font-weight: 500;
+  color: rgba(33, 43, 54, 1);
+  flex: 1;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.task-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-shrink: 0;
+}
+
+.status-tag {
+  padding: 2px 8px;
+  border-radius: 5px;
+  font-size: 11px;
+  font-weight: 600;
+  white-space: nowrap;
+
+  &.open {
+    background-color: rgba(46, 125, 50, 0.1);
+    color: rgba(46, 125, 50, 1);
+  }
+
+  &.in-progress {
+    background-color: rgba(214, 216, 255, 1);
+    color: rgba(62, 64, 219, 1);
+  }
+
+  &.complete {
+    background-color: rgba(225, 255, 204, 1);
+    color: rgba(8, 162, 104, 1);
+  }
+
+  &.blocked {
+    background-color: rgba(252, 238, 181, 1);
+    color: rgba(177, 54, 0, 1);
+  }
+}
+
+.menu-button {
+  background: none;
+  border: none;
+  padding: 4px 6px;
+  cursor: pointer;
+  font-size: 16px;
+  line-height: 1;
+  color: rgba(99, 115, 129, 1);
+  opacity: 0;
+  transition: opacity 0.2s;
+
+  &:hover {
+    color: rgba(33, 43, 54, 1);
+  }
+}
+
+.task-menu {
+  position: absolute;
+  top: 100%;
+  right: 0;
+  margin-top: 4px;
+  background-color: white;
+  border: 1px solid rgba(230, 235, 240, 1);
+  border-radius: 6px;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
+  z-index: 100;
+  overflow: hidden;
+  min-width: 120px;
+}
+
+.menu-item {
+  display: block;
+  width: 100%;
+  padding: 10px 16px;
+  background: none;
+  border: none;
+  text-align: left;
+  font-size: 14px;
+  color: rgba(33, 43, 54, 1);
+  cursor: pointer;
+  transition: background-color 0.2s;
+
+  &:hover {
+    background-color: rgba(238, 240, 255, 1);
+  }
+
+  &:not(:last-child) {
+    border-bottom: 1px solid rgba(230, 235, 240, 1);
+  }
+}

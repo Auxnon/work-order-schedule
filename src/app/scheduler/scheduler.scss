@@ -49,11 +49,11 @@
 
 .error-message {
   position: absolute;
-  top: 60px; // Below timescale dropdown
-  left: 16px;
-  right: 16px;
+  top: 64px; // Below timescale dropdown
+  left: 0px;
+  right: 0px;
   padding: 12px 16px;
-  background-color: rgba(211, 47, 47, 0.1);
+  background-color: rgba(251,234,234,1);//rgba(211, 47, 47, 0.1);
   border-left: 4px solid rgba(211, 47, 47, 1);
   color: rgba(211, 47, 47, 1);
   font-size: 14px;

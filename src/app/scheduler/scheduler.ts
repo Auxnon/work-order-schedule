@@ -1,4 +1,4 @@
-import { Component, ElementRef, signal, viewChild, inject } from '@angular/core';
+import { Component, ElementRef, signal, viewChild, inject, effect } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { injectVirtualizer } from '@tanstack/angular-virtual';
 import { WorkCenterOverlay } from '../work-center-overlay/work-center-overlay';
@@ -8,7 +8,6 @@ import { WorkOrderService } from '../services/work-order.service';
 import { WorkOrder, WorkOrderStatus } from '../models/work-order.model';
 
 export enum Timescale {
-  Hour = 'hour',
   Day = 'day',
   Week = 'week',
   Month = 'month',
@@ -35,9 +34,9 @@ export class Scheduler {
 
   private workOrderService = inject(WorkOrderService);
 
-  timescale = signal<Timescale>(Timescale.Month);
+  timescale = signal<Timescale>(Timescale.Day);
   baseDate = signal<Date>(new Date());
-  private columnCount = 300;
+  columnCount = signal<number>(300);
 
   scrollElement = viewChild<ElementRef<HTMLDivElement>>('scrollElement');
 
@@ -59,17 +58,139 @@ export class Scheduler {
   workOrders = this.workOrderService.getWorkOrders();
 
   virtualizer = injectVirtualizer(() => ({
-    count: this.columnCount,
+    count: this.columnCount(),
     estimateSize: () => this.getColumnWidth(),
     scrollElement: this.scrollElement(),
     overscan: 5,
     horizontal: true,
   }));
 
+  constructor() {
+    // Initialize date range and scroll position whenever timescale or work orders change
+    effect(() => {
+      this.updateDateRangeAndScroll();
+      // Trigger by accessing workOrders to react to changes
+      this.workOrders();
+    });
+  }
+
+  private updateDateRangeAndScroll(): void {
+    const orders = this.workOrders();
+    const now = new Date();
+    
+    // Calculate min and max dates from work orders
+    let minDate: Date | undefined = undefined;
+    let maxDate: Date | undefined = undefined;
+    
+    orders.forEach(order => {
+      if (!minDate || order.startDate < minDate) {
+        minDate = order.startDate;
+      }
+      if (!maxDate || order.endDate > maxDate) {
+        maxDate = order.endDate;
+      }
+    });
+    
+    // Determine base date and column count based on timescale
+    let baseDate: Date;
+    let columnCount: number;
+    let currentColumnIndex: number;
+    
+    const timescale = this.timescale();
+    const buffer = 2; // +/- 2 units
+    
+    switch (timescale) {
+      case Timescale.Day:
+        if (minDate && maxDate) {
+          const minTime = new Date(minDate);
+          minTime.setDate(minTime.getDate() - buffer);
+          const maxTime = new Date(maxDate);
+          maxTime.setDate(maxTime.getDate() + buffer);
+          
+          baseDate = minTime;
+          const totalDays = Math.ceil((maxTime.getTime() - minTime.getTime()) / this.MS_PER_DAY);
+          columnCount = Math.max(30, totalDays);
+          
+          // Calculate current day index
+          currentColumnIndex = Math.floor((now.getTime() - baseDate.getTime()) / this.MS_PER_DAY);
+        } else {
+          // No tasks, show current day with buffer
+          baseDate = new Date(now);
+          baseDate.setDate(baseDate.getDate() - buffer);
+          columnCount = 30;
+          currentColumnIndex = buffer;
+        }
+        break;
+        
+      case Timescale.Week:
+        if (minDate && maxDate) {
+          const minTime = new Date(minDate);
+          minTime.setDate(minTime.getDate() - (buffer * 7));
+          const maxTime = new Date(maxDate);
+          maxTime.setDate(maxTime.getDate() + (buffer * 7));
+          
+          baseDate = minTime;
+          const totalWeeks = Math.ceil((maxTime.getTime() - minTime.getTime()) / (this.MS_PER_DAY * 7));
+          columnCount = Math.max(20, totalWeeks);
+          
+          currentColumnIndex = Math.floor((now.getTime() - baseDate.getTime()) / (this.MS_PER_DAY * 7));
+        } else {
+          baseDate = new Date(now);
+          baseDate.setDate(baseDate.getDate() - (buffer * 7));
+          columnCount = 20;
+          currentColumnIndex = buffer;
+        }
+        break;
+        
+      case Timescale.Month:
+        if (minDate !== undefined && maxDate !== undefined) {
+          const minD: Date = minDate;
+          const maxD: Date = maxDate;
+          const minYearMonth = (minD.getFullYear() * 12) + minD.getMonth() - buffer;
+          const maxYearMonth = (maxD.getFullYear() * 12) + maxD.getMonth() + buffer;
+          
+          baseDate = new Date();
+          baseDate.setFullYear(Math.floor(minYearMonth / 12));
+          baseDate.setMonth(minYearMonth % 12);
+          baseDate.setDate(1);
+          
+          columnCount = Math.max(12, maxYearMonth - minYearMonth + 1);
+          
+          const nowYearMonth = (now.getFullYear() * 12) + now.getMonth();
+          currentColumnIndex = nowYearMonth - minYearMonth;
+        } else {
+          baseDate = new Date(now.getFullYear(), now.getMonth() - buffer, 1);
+          columnCount = 12;
+          currentColumnIndex = buffer;
+        }
+        break;
+        
+      default:
+        baseDate = new Date();
+        columnCount = 30;
+        currentColumnIndex = 0;
+    }
+    
+    this.baseDate.set(baseDate);
+    this.columnCount.set(columnCount);
+    
+    // Scroll to current period after a short delay to ensure DOM is ready
+    setTimeout(() => {
+      this.scrollToColumn(currentColumnIndex);
+    }, 100);
+  }
+  
+  private scrollToColumn(columnIndex: number): void {
+    const scrollContainer = this.scrollElement()?.nativeElement;
+    if (scrollContainer) {
+      const columnWidth = this.getColumnWidth();
+      const scrollPosition = columnIndex * columnWidth;
+      scrollContainer.scrollLeft = scrollPosition;
+    }
+  }
+
   private getColumnWidth(): number {
     switch (this.timescale()) {
-      case Timescale.Hour:
-        return 120;
       case Timescale.Day:
         return 150;
       case Timescale.Week:
@@ -87,13 +208,6 @@ export class Scheduler {
     let label: string;
 
     switch (this.timescale()) {
-      case Timescale.Hour:
-        date = new Date(base.getTime() + index * this.MS_PER_HOUR);
-        label = date.toLocaleTimeString('en-US', {
-          hour: 'numeric',
-          hour12: true,
-        });
-        break;
       case Timescale.Day:
         date = new Date(base);
         date.setDate(base.getDate() + index);
@@ -136,6 +250,13 @@ export class Scheduler {
     const scrollContainer = this.scrollElement()?.nativeElement;
     if (!scrollContainer) return;
 
+    // Check if mouse is over a task or work center overlay
+    const target = event.target as HTMLElement;
+    if (this.isOverTaskOrOverlay(target)) {
+      this.showHoverEffect.set(false);
+      return;
+    }
+
     const scrollRect = scrollContainer.getBoundingClientRect();
     const scrollLeft = scrollContainer.scrollLeft || 0;
 
@@ -171,6 +292,12 @@ export class Scheduler {
   }
 
   onClick(event: MouseEvent): void {
+    // Check if click is on a task or work center overlay
+    const target = event.target as HTMLElement;
+    if (this.isOverTaskOrOverlay(target)) {
+      return; // Don't create task if clicking on task or overlay
+    }
+
     // Clear any previous error
     this.errorMessage.set('');
 
@@ -239,16 +366,27 @@ export class Scheduler {
     }
   }
 
+  private isOverTaskOrOverlay(element: HTMLElement): boolean {
+    // Check if element or any parent is a task or work center overlay
+    let current: HTMLElement | null = element;
+    while (current) {
+      if (current.classList.contains('task-wrapper') ||
+          current.classList.contains('task-card') ||
+          current.tagName.toLowerCase() === 'app-task' ||
+          current.classList.contains('work-center-overlay') ||
+          current.tagName.toLowerCase() === 'app-work-center-overlay') {
+        return true;
+      }
+      current = current.parentElement;
+    }
+    return false;
+  }
+
   isCurrentPeriod(columnIndex: number): boolean {
     const now = new Date();
     const columnDate = this.getDateForColumn(columnIndex).date;
 
     switch (this.timescale()) {
-      case Timescale.Hour:
-        return now.getFullYear() === columnDate.getFullYear() &&
-               now.getMonth() === columnDate.getMonth() &&
-               now.getDate() === columnDate.getDate() &&
-               now.getHours() === columnDate.getHours();
       case Timescale.Day:
         return now.getFullYear() === columnDate.getFullYear() &&
                now.getMonth() === columnDate.getMonth() &&
@@ -267,8 +405,6 @@ export class Scheduler {
 
   getCurrentPeriodLabel(): string {
     switch (this.timescale()) {
-      case Timescale.Hour:
-        return 'hour';
       case Timescale.Day:
         return 'day';
       case Timescale.Week:
@@ -326,26 +462,31 @@ export class Scheduler {
     const startDate = workOrder.startDate;
     const columnWidth = this.getColumnWidth();
 
-    let indexOffset: number;
+    let offset: number; // Offset in fractional units (can be decimal)
     switch (this.timescale()) {
-      case Timescale.Hour:
-        indexOffset = (startDate.getTime() - baseDate.getTime()) / this.MS_PER_HOUR;
-        break;
       case Timescale.Day:
-        indexOffset = Math.floor((startDate.getTime() - baseDate.getTime()) / this.MS_PER_DAY);
+        offset = (startDate.getTime() - baseDate.getTime()) / this.MS_PER_DAY;
         break;
       case Timescale.Week:
-        indexOffset = Math.floor((startDate.getTime() - baseDate.getTime()) / (this.MS_PER_DAY * 7));
+        offset = (startDate.getTime() - baseDate.getTime()) / (this.MS_PER_DAY * 7);
         break;
       case Timescale.Month:
-        indexOffset = (startDate.getFullYear() - baseDate.getFullYear()) * 12 +
-                     (startDate.getMonth() - baseDate.getMonth());
+        // Calculate month offset with fractional part for day within month
+        const yearsDiff = startDate.getFullYear() - baseDate.getFullYear();
+        const monthsDiff = startDate.getMonth() - baseDate.getMonth();
+        const totalMonthsDiff = yearsDiff * 12 + monthsDiff;
+        
+        // Calculate fractional month based on day of month
+        const daysInStartMonth = new Date(startDate.getFullYear(), startDate.getMonth() + 1, 0).getDate();
+        const dayFraction = (startDate.getDate() - 1) / daysInStartMonth;
+        
+        offset = totalMonthsDiff + dayFraction;
         break;
       default:
-        indexOffset = 0;
+        offset = 0;
     }
 
-    return Math.max(0, indexOffset * columnWidth);
+    return Math.max(0, offset * columnWidth);
   }
 
   getTaskWidth(workOrder: WorkOrder): number {
@@ -353,11 +494,8 @@ export class Scheduler {
     const endDate = workOrder.endDate;
     const columnWidth = this.getColumnWidth();
 
-    let duration: number;
+    let duration: number; // Duration in fractional units (can be decimal)
     switch (this.timescale()) {
-      case Timescale.Hour:
-        duration = (endDate.getTime() - startDate.getTime()) / this.MS_PER_HOUR;
-        break;
       case Timescale.Day:
         duration = (endDate.getTime() - startDate.getTime()) / this.MS_PER_DAY;
         break;
@@ -365,14 +503,26 @@ export class Scheduler {
         duration = (endDate.getTime() - startDate.getTime()) / (this.MS_PER_DAY * 7);
         break;
       case Timescale.Month:
-        duration = (endDate.getFullYear() - startDate.getFullYear()) * 12 +
-                  (endDate.getMonth() - startDate.getMonth());
+        // Calculate month duration with fractional parts
+        const yearsDiff = endDate.getFullYear() - startDate.getFullYear();
+        const monthsDiff = endDate.getMonth() - startDate.getMonth();
+        const totalMonthsDiff = yearsDiff * 12 + monthsDiff;
+        
+        // Calculate fractional parts for start and end
+        const daysInStartMonth = new Date(startDate.getFullYear(), startDate.getMonth() + 1, 0).getDate();
+        const daysInEndMonth = new Date(endDate.getFullYear(), endDate.getMonth() + 1, 0).getDate();
+        
+        const startDayFraction = (startDate.getDate() - 1) / daysInStartMonth;
+        const endDayFraction = (endDate.getDate() - 1) / daysInEndMonth;
+        
+        duration = totalMonthsDiff + endDayFraction - startDayFraction;
         break;
       default:
         duration = 1;
     }
 
-    return Math.max(columnWidth * this.MIN_TASK_WIDTH_RATIO, duration * columnWidth);
+    // Return actual duration without minimum clamping
+    return Math.max(1, duration * columnWidth); // At least 1px to be visible
   }
 
   readonly Timescale = Timescale;

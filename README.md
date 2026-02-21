@@ -9,7 +9,6 @@ To start a local development server, run:
 just dev
 ```
 or 
-
 ```bash
 bun run dev
 ```
@@ -24,7 +23,6 @@ To build the project run:
 just build
 ```
 or 
-
 ```bash
 bun run build
 ```
@@ -38,7 +36,7 @@ To execute unit tests with the [Vitest](https://vitest.dev/) test runner, use th
 ```bash
 just test
 ```
-
+or
 ```bash
 bun run test
 ```

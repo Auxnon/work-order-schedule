@@ -3,7 +3,7 @@
   height: 100vh;
   display: flex;
   flex-direction: column;
-  position: absolute;
+  position: relative;
   left: 0;
   top: 0;
 }
@@ -19,29 +19,29 @@
   display: inline-flex;
   border-radius: 6px;
   overflow: hidden;
+  box-shadow: 1px 2.5px 3px -1.5px rgba(200, 207, 233, 1);
 }
 
 .timescale-label {
-  padding: 8px 12px;
-  font-size: 14px;
+  padding: 0px 8px;
+  font-size: 13px;
   background-color: rgba(241, 243, 248, 0.75);
   color: rgba(104, 113, 150, 1);
   display: flex;
   align-items: center;
-  font-weight: 500;
-  border: 1px solid rgba(230, 235, 240, 1);
-  border-right: none;
+  font-weight: 400;
 }
 
 .timescale-select {
   padding: 8px 12px;
-  font-size: 14px;
+  font-size: 13px;
+  color: rgba(62, 64, 219, 1);
   border: 1px solid rgba(230, 235, 240, 1);
   border-radius: 0 6px 6px 0;
   outline: none;
   cursor: pointer;
   background-color: white;
-
+  font-weight: 500;
   &:focus {
     border-color: rgba(101, 112, 255, 1);
   }
@@ -116,7 +116,6 @@
   min-width: 93px;
   height: 18px;
   color: rgba(62, 64, 219, 1);
-  font-family: CircularStd-Book, sans-serif;
   font-size: 14px;
   font-weight: 400;
   line-height: 18px;
@@ -177,6 +176,7 @@
 // Tasks panel - above interaction pane for tasks to be visible
 .tasks-panel {
   position: absolute;
+  width: 100%;
   top: 52px;
   left: 0;
   right: 0;
